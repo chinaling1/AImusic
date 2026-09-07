@@ -1,0 +1,74 @@
+# ============================================================
+# 古韵AI 项目 .gitignore
+# 目标：仓库只存源码与文档，绝不存依赖、构建产物、密钥与生成文件
+# ============================================================
+
+# ---------- Node 依赖 ----------
+node_modules/
+frontend/node_modules/
+.npm/
+.pnpm-store/
+
+# ---------- 构建产物 ----------
+frontend/dist/
+dist/
+dist-backend/
+release/
+build/
+*.tsbuildinfo
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+backend/*.db
+backend/*.db-journal
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
+
+# ---------- PyInstaller ----------
+*.spec.bak
+backend/build/
+backend/dist/
+
+# ---------- 环境变量与密钥（绝不入库） ----------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ---------- 生成产物（MIDI / 音频 / 乐谱导出） ----------
+backend/output/*.mid
+backend/output/*.wav
+backend/output/*.mp3
+backend/output/*.lrc
+backend/output/*.pdf
+backend/output/*.musicxml
+backend/output/*.mxl
+!backend/output/.gitkeep
+
+# ---------- 编辑器 / 系统 ----------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- 日志 ----------
+*.log
+logs/
+
+# ---------- 大模型权重与音色库（体积过大，本地自持不入库） ----------
+models/
+*.sf2
+*.sf3
+*.sfz
+*.ckpt
+*.safetensors
+*.onnx
