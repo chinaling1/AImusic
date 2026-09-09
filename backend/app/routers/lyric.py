@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
+"""歌词生成路由（主流程第 2 步）
+
+输出的歌词为 MiniMax 音乐网页版格式：英文结构标签独占一行，
+标签后可加圆括号编曲/人声注记。MiniMax 不接收时间轴，因此不再生成 LRC。
+"""
 from fastapi import APIRouter
 from fastapi.responses import Response
 from app.models.schemas import LyricGenerateRequest, LyricGenerateResponse
 from app.services.llm_service import llm_service
-from app.utils.lrc_utils import generate_lrc
-from app.database import save_prompt_version
 import uuid
 
 router = APIRouter(prefix="/api/lyric", tags=["lyric"])
@@ -15,11 +19,10 @@ async def generate_lyrics(request: LyricGenerateRequest):
 
     lyrics = await llm_service.generate_lyrics(request.prompt, request.style or "古风")
 
-    lrc_content = generate_lrc(lyrics)
-
     return LyricGenerateResponse(
         lyrics=lyrics,
-        lrc_content=lrc_content,
+        # 保留字段以兼容旧前端，但 MiniMax 格式不含时间轴，恒为 None
+        lrc_content=None,
         model="deepseek_pro",
         session_id=session_id
     )
