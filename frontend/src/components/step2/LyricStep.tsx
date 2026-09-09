@@ -2,14 +2,18 @@ import { useState } from 'react'
 import { useMusicStore } from '../../store/musicStore'
 import { api } from '../../services/api'
 
+const LYRICS_LIMIT = 3500 // MiniMax 歌词字符上限
+
+// MiniMax 网页版歌词框支持的结构标签（点击插入）
+const QUICK_TAGS = ['[Intro]', '[Verse 1]', '[Pre-Chorus]', '[Chorus]', '[Verse 2]', '[Bridge]', '[Interlude]', '[Outro]']
+
 export default function LyricStep() {
   const {
-    finalPrompt, generatedLyrics, lrcContent, sessionId,
-    setGeneratedLyrics, setLrcContent, setFinalLyrics,
+    finalPrompt, generatedLyrics, sessionId, instrumental,
+    setGeneratedLyrics, setFinalLyrics, setInstrumental,
     setStep, setLoading, setError, loading,
   } = useMusicStore()
 
-  const [paragraphCount, setParagraphCount] = useState(2)
   const [rhymePreference, setRhymePreference] = useState('auto')
   const [editingLyrics, setEditingLyrics] = useState('')
   const [showEditor, setShowEditor] = useState(false)
@@ -19,19 +23,15 @@ export default function LyricStep() {
     setLoading(true)
     setError(null)
     try {
-      const result = await api.generateLyrics(finalPrompt, rhymePreference, sessionId)
+      // 风格偏好拼进 style 参数（后端再转成 LLM 指令）
+      const styleArg = instrumental
+        ? '纯音乐意境（注记为主，正文极少或留空）'
+        : `古风；押韵偏好：${rhymePreference === 'auto' ? '自动' : rhymePreference + '韵'}`
+      const result = await api.generateLyrics(finalPrompt, styleArg, sessionId)
       const lyrics = result.lyrics || result.content || ''
       setGeneratedLyrics(lyrics)
       setEditingLyrics(lyrics)
       setShowEditor(true)
-      const lines = lyrics.split('\n').filter((l: string) => l.trim())
-      const lrc = lines.map((line: string, i: number) => {
-        const mm = String(Math.floor(i * 8 / 60)).padStart(2, '0')
-        const ss = String((i * 8) % 60).padStart(2, '0')
-        const mmm = '000'
-        return `[${mm}:${ss}.${mmm}]${line}`
-      }).join('\n')
-      setLrcContent(lrc)
     } catch (err) {
       setError(err instanceof Error ? err.message : '生成歌词失败')
     } finally {
@@ -39,83 +39,61 @@ export default function LyricStep() {
     }
   }
 
-  const handleSaveLrc = () => {
-    if (!lrcContent) return
-    const blob = new Blob([lrcContent], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'lyrics.lrc'
-    a.click()
-    URL.revokeObjectURL(url)
+  const insertTag = (tag: string) => {
+    // 在光标处插入结构标签（独占一行）
+    const textarea = document.getElementById('lyrics-editor') as HTMLTextAreaElement | null
+    if (!textarea) {
+      setEditingLyrics((prev) => `${prev}\n${tag}\n`)
+      return
+    }
+    const start = textarea.selectionStart
+    const before = editingLyrics.slice(0, start)
+    const after = editingLyrics.slice(textarea.selectionEnd)
+    // 保证标签前面有换行
+    const prefix = before && !before.endsWith('\n') ? '\n' : ''
+    const next = `${before}${prefix}${tag}\n${after}`
+    setEditingLyrics(next)
+    // 光标移到标签行之后
+    requestAnimationFrame(() => {
+      const pos = (before + prefix + tag + '\n').length
+      textarea.focus()
+      textarea.setSelectionRange(pos, pos)
+    })
   }
 
   const handleConfirm = () => {
     const lyrics = showEditor ? editingLyrics : generatedLyrics
-    if (!lyrics.trim()) return
+    if (!lyrics.trim() && !instrumental) return
     setFinalLyrics(lyrics)
     setStep(2)
   }
 
-  const handleLyricsEdit = (value: string) => {
-    setEditingLyrics(value)
-    const lines = value.split('\n').filter((l) => l.trim())
-    const lrcLines: string[] = []
-    let lineIndex = 0
-    for (const line of lines) {
-      const mm = String(Math.floor(lineIndex * 8 / 60)).padStart(2, '0')
-      const ss = String((lineIndex * 8) % 60).padStart(2, '0')
-      lrcLines.push(`[${mm}:${ss}.000]${line}`)
-      lineIndex++
-    }
-    setLrcContent(lrcLines.join('\n'))
-  }
-
-  const handleTimeChange = (lineIndex: number, timeStr: string) => {
-    const lines = lrcContent.split('\n')
-    if (lineIndex < lines.length) {
-      const content = lines[lineIndex].replace(/^\[\d{2}:\d{2}\.\d{3}\]/, '')
-      lines[lineIndex] = `[${timeStr}]${content}`
-      setLrcContent(lines.join('\n'))
-    }
-  }
-
-  const lrcLines = lrcContent.split('\n').filter((l) => l.trim())
+  const charCount = (showEditor ? editingLyrics : generatedLyrics).length
+  const overLimit = charCount > LYRICS_LIMIT
 
   return (
     <div className="flex flex-col gap-6 py-8">
       <div className="text-center mb-2">
         <h2 className="text-2xl text-gold font-bold mb-2">歌词生成</h2>
-        <p className="text-rice-dark text-sm">基于提示词生成古风歌词，支持编辑与时间轴标注</p>
+        <p className="text-rice-dark text-sm">生成 MiniMax 歌词框可直接粘贴的英文结构标签歌词，标签后可带编曲/人声注记</p>
       </div>
 
       <div className="bg-ink-light border border-gold/20 rounded-xl p-5">
         <h3 className="text-gold text-sm font-medium mb-2">参考提示词</h3>
-        <p className="text-rice-dark text-sm leading-relaxed">{finalPrompt || '尚未设置提示词'}</p>
+        <p className="text-rice-dark text-sm leading-relaxed whitespace-pre-wrap">{finalPrompt || '尚未设置提示词'}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
           <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-            <div className="flex items-center gap-6 mb-4">
-              <div className="flex items-center gap-2">
-                <label className="text-rice text-sm">段落数</label>
-                <select
-                  className="bg-ink border border-gold/20 rounded-lg px-3 py-1.5 text-rice text-sm focus:outline-none focus:border-gold/50"
-                  value={paragraphCount}
-                  onChange={(e) => setParagraphCount(Number(e.target.value))}
-                >
-                  {[1, 2, 3, 4].map((n) => (
-                    <option key={n} value={n}>{n}段</option>
-                  ))}
-                </select>
-              </div>
+            <div className="flex items-center gap-6 mb-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <label className="text-rice text-sm">押韵偏好</label>
                 <select
                   className="bg-ink border border-gold/20 rounded-lg px-3 py-1.5 text-rice text-sm focus:outline-none focus:border-gold/50"
                   value={rhymePreference}
                   onChange={(e) => setRhymePreference(e.target.value)}
+                  disabled={instrumental}
                 >
                   <option value="auto">自动</option>
                   <option value="ang">ang韵</option>
@@ -124,6 +102,15 @@ export default function LyricStep() {
                   <option value="ou">ou韵</option>
                 </select>
               </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="accent-gold w-4 h-4"
+                  checked={instrumental}
+                  onChange={(e) => setInstrumental(e.target.checked)}
+                />
+                <span className="text-rice text-sm">纯音乐模式（对应 MiniMax Instrumental 开关）</span>
+              </label>
             </div>
             <button
               className="px-6 py-2.5 bg-gold hover:bg-gold-light text-ink rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -136,51 +123,34 @@ export default function LyricStep() {
 
           {showEditor && (
             <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-              <label className="block text-gold text-sm font-medium mb-3">歌词编辑器</label>
-              <div className="relative">
-                <div className="absolute left-0 top-0 bottom-0 w-8 bg-ink-light border-r border-gold/10 flex flex-col items-center pt-4 text-rice-dark text-xs select-none overflow-hidden">
-                  {editingLyrics.split('\n').map((_, i) => (
-                    <div key={i} className="leading-6 h-6">{i + 1}</div>
-                  ))}
-                </div>
-                <textarea
-                  className="w-full h-64 bg-ink border border-gold/20 rounded-lg pl-10 pr-4 py-4 text-rice placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none leading-6"
-                  value={editingLyrics}
-                  onChange={(e) => handleLyricsEdit(e.target.value)}
-                />
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-gold text-sm font-medium">歌词编辑器（MiniMax 格式）</label>
+                <span className={`text-xs ${overLimit ? 'text-vermilion-light' : 'text-rice-dark'}`}>
+                  {charCount} / {LYRICS_LIMIT} 字符
+                </span>
               </div>
-            </div>
-          )}
-
-          {showEditor && lrcLines.length > 0 && (
-            <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-              <label className="block text-gold text-sm font-medium mb-3">时间轴编辑</label>
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {lrcLines.map((line, i) => {
-                  const match = line.match(/^\[(\d{2}:\d{2}\.\d{3})\](.*)/)
-                  if (!match) return null
-                  return (
-                    <div key={i} className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        className="w-24 bg-ink border border-gold/20 rounded px-2 py-1 text-rice text-xs text-center focus:outline-none focus:border-gold/50"
-                        value={match[1]}
-                        onChange={(e) => handleTimeChange(i, e.target.value)}
-                        placeholder="MM:SS.mmm"
-                      />
-                      <span className="text-rice-dark text-xs flex-1 truncate">{match[2]}</span>
-                    </div>
-                  )
-                })}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {QUICK_TAGS.map((tag) => (
+                  <button
+                    key={tag}
+                    className="px-3 py-1 border border-gold/30 text-gold hover:bg-gold/10 rounded text-xs font-mono transition-colors"
+                    onClick={() => insertTag(tag)}
+                    title="点击在光标处插入结构标签"
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
-              <div className="flex gap-3 mt-4">
-                <button
-                  className="px-5 py-2 border border-gold/40 text-gold hover:bg-gold/10 rounded-lg text-sm transition-colors"
-                  onClick={handleSaveLrc}
-                >
-                  保存LRC
-                </button>
-              </div>
+              <textarea
+                id="lyrics-editor"
+                className="w-full h-72 bg-ink border border-gold/20 rounded-lg p-4 text-rice text-sm font-mono placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none leading-6"
+                value={editingLyrics}
+                onChange={(e) => setEditingLyrics(e.target.value)}
+                placeholder={'[Intro]\n(古筝泛音与箫声渐入)\n\n[Verse 1]\n歌词第一行\n歌词第二行\n\n[Chorus]\n...'}
+              />
+              <p className="text-rice-dark text-xs mt-2 leading-relaxed">
+                结构标签独占一行、必须英文（网页版输入 "/" 可快捷插入）；标签下一行可用圆括号写编曲/人声/情绪注记
+              </p>
             </div>
           )}
 
@@ -194,9 +164,9 @@ export default function LyricStep() {
             <button
               className="px-8 py-3 bg-vermilion hover:bg-vermilion-light text-rice rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleConfirm}
-              disabled={!generatedLyrics.trim() || loading}
+              disabled={(!generatedLyrics.trim() && !instrumental) || loading}
             >
-              确认歌词
+              确认歌词，进入导出
             </button>
           </div>
         </div>
@@ -204,9 +174,18 @@ export default function LyricStep() {
         <div className="flex flex-col gap-4">
           <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
             <h3 className="text-gold text-sm font-medium mb-3">歌词预览</h3>
-            <pre className="whitespace-pre-wrap text-rice text-sm leading-relaxed font-serif">
+            <pre className="whitespace-pre-wrap text-rice text-sm leading-relaxed font-serif max-h-96 overflow-y-auto">
               {generatedLyrics || '尚未生成歌词'}
             </pre>
+          </div>
+          <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
+            <h3 className="text-gold text-sm font-medium mb-3">格式要点</h3>
+            <ul className="text-rice-dark text-xs space-y-2 leading-relaxed">
+              <li>• 标签独占一行：[Intro] [Verse 1] [Chorus] [Bridge] [Outro] 等</li>
+              <li>• 标签后注记：圆括号一行，如 (古筝轮指渐入，鼓点渐强)</li>
+              <li>• 上限 3500 字符；留空则 MiniMax 按 Styles 自动生成歌词</li>
+              <li>• 不要时间戳、不要中文标签（[主歌] 不识别）</li>
+            </ul>
           </div>
         </div>
       </div>

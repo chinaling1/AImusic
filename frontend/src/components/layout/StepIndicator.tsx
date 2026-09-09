@@ -5,8 +5,7 @@ interface StepIndicatorProps {
 const steps = [
   { label: '提示词', num: '①' },
   { label: '歌词', num: '②' },
-  { label: '曲谱', num: '③' },
-  { label: 'MIDI', num: '④' },
+  { label: '导出', num: '③' },
 ]
 
 export default function StepIndicator({ currentStep }: StepIndicatorProps) {

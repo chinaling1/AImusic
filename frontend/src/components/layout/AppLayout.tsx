@@ -16,7 +16,7 @@ export default function AppLayout({ children, currentStep }: AppLayoutProps) {
       <header className="border-b border-gold/30 px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gold tracking-wider">
-            古韵AI — 古风音乐创作工坊
+            古韵AI — 古风音乐提示词工坊
           </h1>
           <button
             className="w-9 h-9 flex items-center justify-center rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"
@@ -41,7 +41,7 @@ export default function AppLayout({ children, currentStep }: AppLayoutProps) {
       </main>
 
       <footer className="border-t border-gold/20 px-6 py-3 text-center text-rice-dark text-xs">
-        古韵AI © 2026 — 词曲创作辅助工具
+        古韵AI © 2026 — 古风音乐提示词生成工具 · 输出适配 MiniMax Music
       </footer>
 
       <SettingsModal

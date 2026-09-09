@@ -2,10 +2,9 @@ import AppLayout from './components/layout/AppLayout'
 import { useMusicStore } from './store/musicStore'
 import PromptStep from './components/step1/PromptStep'
 import LyricStep from './components/step2/LyricStep'
-import ScoreStep from './components/step3/ScoreStep'
-import MidiStep from './components/step4/MidiStep'
+import ExportStep from './components/step3/ExportStep'
 
-const stepComponents = [PromptStep, LyricStep, ScoreStep, MidiStep]
+const stepComponents = [PromptStep, LyricStep, ExportStep]
 
 export default function App() {
   const { currentStep, loading, error } = useMusicStore()

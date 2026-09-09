@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from app.database import init_db
-from app.routers import prompt, lyric, score, midi
+from app.routers import prompt, lyric, score, midi, minimax
 from app.services.llm_service import llm_service
 
 
@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="AI音乐生成后端", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="古韵AI — MiniMax 提示词工坊", version="2.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,6 +29,7 @@ app.include_router(prompt.router)
 app.include_router(lyric.router)
 app.include_router(score.router)
 app.include_router(midi.router)
+app.include_router(minimax.router)
 
 
 class ApiKeyRequest(BaseModel):

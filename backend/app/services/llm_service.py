@@ -68,36 +68,52 @@ class LLMService:
         return response.choices[0].message.content
 
     async def optimize_prompt(self, user_prompt: str, step: str = "prompt") -> str:
-        """使用DeepSeek Pro优化提示词"""
-        system_prompt = """你是一位专业的古风音乐创作顾问。你的任务是将用户提供的音乐创作描述优化为专业、精确的创作提示词。
-优化要求：
-1. 补充古风音乐专业术语（如：宫调式、羽调式、五声音阶等）
-2. 明确音乐结构（前奏-主歌-副歌-间奏-尾奏）
-3. 细化情感层次和意境描述
-4. 指定节奏特征（如：慢板、中板、快板）
-5. 描述配器建议（古筝、钢琴、小提琴等）
-6. 保持用户原始意图，仅做专业化扩展
-请直接输出优化后的提示词，不要解释。"""
+        """将用户想法转化为 MiniMax 音乐网页版可直接使用的提示词：
+        结构化元标签（Structured Caption）+ 风格描述（Styles 描述）"""
+        system_prompt = """你是一位专业的古风音乐创作顾问，精通 MiniMax Music 的提示词规范。
+你的任务是将用户提供的音乐创作想法，转化为可直接粘贴到 MiniMax 音乐网页版的提示词。
+
+输出必须严格分为两段，用以下标记分隔（标记行原样输出，不要加任何其他说明文字）：
+
+===META===
+（结构化元标签，每行一个，格式为 [标签名] 值，必须包含全部六项：）
+[Genre] 曲风（古风 + 具体融合风格，如：古风流行、国风电子、民谣古风）
+[BPM] 速度（如：68 BPM，古风多为慢板 60-80）
+[Key] 调性（如：D 羽调式 / A 宫五声调式）
+[Vocals] 人声（性别、音色、唱法，如：女声，清亮婉转，副歌加和声）
+[Instruments] 乐器（3-6 件，古筝/笛箫/琵琶/古琴/钢琴/弦乐等，主奏在前）
+[Arrangement] 编曲走向（一段话描述起承转合：前奏意境 → 主歌铺垫 → 副歌情绪爆发 → 桥段转折 → 尾奏收束）
+
+===STYLES===
+（风格描述，一段连贯中文，80-200 字，供 MiniMax 的 Styles 输入框使用。
+要求：点明曲风、情绪、场景意境、核心乐器、人声特质；语言具体不空泛；
+不出现歌词内容；不使用换行。）
+
+创作原则：
+1. 古风专业术语准确（宫调式、羽调式、五声音阶、散板、轮指、泛音等）
+2. 保持用户原始意图，仅做专业化扩展
+3. 全部用中文输出（标签名保留英文方括号格式）
+只输出两段内容，从 ===META=== 开始，不要任何前后缀解释。"""
         return await self.call_deepseek_pro(user_prompt, system_prompt)
 
     async def generate_lyrics(self, prompt: str, style: str = "古风") -> str:
-        """使用DeepSeek Pro生成歌词"""
-        system_prompt = f"""你是一位古风歌词创作大师。根据提示词创作古风歌词。
-要求：
-1. 使用{style}风格
-2. 歌词结构：主歌-副歌-主歌-副歌-桥段-副歌
-3. 每行歌词前标注时间戳，格式：[MM:SS.xx]
-4. 使用古风意象和修辞手法
-5. 押韵工整，意境深远
-6. 在歌词前用[段落标记]标注结构（如[主歌1][副歌]等）
+        """生成 MiniMax 音乐网页版可直接粘贴的歌词：
+        英文结构标签 + 标签后编曲/人声/情绪注记 + 古风正文"""
+        system_prompt = f"""你是一位古风歌词创作大师。根据提示词创作可直接粘贴进 MiniMax 音乐网页版歌词框的古风歌词。
 
-输出格式示例：
-[主歌1]
-[00:00.00]第一行歌词
-[00:04.50]第二行歌词
-[副歌]
-[00:12.00]副歌第一行
-..."""
+MiniMax 歌词格式硬性要求：
+1. 结构标签必须用英文方括号，且独占一行。可用标签：
+   [Intro] [Verse] [Verse 1] [Verse 2] [Pre-Chorus] [Chorus] [Bridge] [Interlude] [Outro] [Hook] [Solo] [Inst]
+2. 标签行的紧邻下一行，可以用中文圆括号写编曲/人声/情绪注记，如：
+   [Intro]
+   (古筝泛音与箫声渐入，空灵悠远)
+3. 正文歌词使用中文，古典意象，押韵工整，意境深远
+4. 推荐结构：[Intro] → [Verse 1] → [Pre-Chorus] → [Chorus] → [Verse 2] → [Pre-Chorus] → [Chorus] → [Bridge] → [Chorus] → [Outro]
+5. 全文总长控制在 1500 字符以内（MiniMax 上限 3500，留出余量）
+6. 不要输出时间戳、不要用中文标签（如[主歌]）、不要解释
+
+风格要求：{style}
+只输出歌词本体，从 [Intro] 开始。"""
         return await self.call_deepseek_pro(prompt, system_prompt)
 
     async def quick_suggest(self, text: str, context: str = "") -> str:

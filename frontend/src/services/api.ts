@@ -28,6 +28,17 @@ export const api = {
   generateLyrics: (prompt: string, style?: string, sessionId?: string) =>
     request('/lyric/generate', { method: 'POST', body: JSON.stringify({ prompt, style, session_id: sessionId }) }),
 
+  // MiniMax 提示词格式校验（确定性算法，本地后端执行）
+  validateMiniMax: (payload: { styles?: string; metaTags?: string; lyrics?: string; instrumental?: boolean }) =>
+    request('/minimax/validate', {
+      method: 'POST',
+      body: JSON.stringify({ styles: payload.styles || '', meta_tags: payload.metaTags || '', lyrics: payload.lyrics || '', instrumental: payload.instrumental || false }),
+    }),
+
+  getMiniMaxFormatSpec: () =>
+    request('/minimax/format-spec'),
+
+  // ---- 本地曲谱/MIDI 兜底管线（P1 备用，主流程不经过）----
   exportLrc: (lrcContent: string, filename?: string) =>
     request('/lyric/export', { method: 'POST', body: JSON.stringify({ lrc_content: lrcContent, filename: filename || 'lyrics.lrc' }) }),
 
