@@ -35,9 +35,12 @@ class LLMService:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        # v4 系列默认思考模式，创作任务关闭可降延迟（extra_body 传原生参数）
+        extra = {"thinking": {"type": "disabled"}} if settings.DEEPSEEK_DISABLE_THINKING else {}
         response = await self.deepseek_client.chat.completions.create(
             model=settings.DEEPSEEK_PRO_MODEL,
             messages=messages,
+            **({"extra_body": extra} if extra else {}),
         )
         return response.choices[0].message.content
 
@@ -47,11 +50,13 @@ class LLMService:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
+        extra = {"thinking": {"type": "disabled"}} if settings.DEEPSEEK_DISABLE_THINKING else {}
         response = await self.deepseek_client.chat.completions.create(
             model=settings.DEEPSEEK_FLASH_MODEL,
             messages=messages,
-            max_tokens=256,
+            max_tokens=2048,   # 原 256 过短，短提示词也会被截断
             temperature=0.3,
+            **({"extra_body": extra} if extra else {}),
         )
         return response.choices[0].message.content
 
