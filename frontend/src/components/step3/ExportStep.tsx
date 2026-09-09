@@ -3,6 +3,7 @@ import { useMusicStore } from '../../store/musicStore'
 import { api } from '../../services/api'
 import { STYLES_LIMIT, LYRICS_LIMIT } from '../../constants/limits'
 import { useCopy } from '../../hooks/useCopy'
+import { countChars } from '../step2/LyricEditor'
 import SectionCard from '../common/SectionCard'
 import CharCounter from '../common/CharCounter'
 import CopyButton from '../common/CopyButton'
@@ -49,7 +50,7 @@ function buildExportPack({
     `结构段落数：${sectionCount ?? '未校验'}`,
     sections?.length ? `段落结构：${sections.join(' → ')}` : '',
     '',
-    '—— 由 古韵AI（本地 LLM 提示词引擎 + 确定性格式校验）生成 ——',
+    '—— 由 古韵AI（本地提示词工程 + 云端大模型 API + 本地确定性校验算法）生成 ——',
   ].filter((line) => line !== '').join('\n')
 }
 
@@ -72,11 +73,24 @@ export default function ExportStep() {
 
   const [validation, setValidation] = useState<ValidateResult | null>(null)
   const [validating, setValidating] = useState(false)
+  const [copyFailed, setCopyFailed] = useState(false)
   const { copiedKey, copy } = useCopy()
 
   // 粘贴到 MiniMax Styles 框的内容：风格描述（元标签是设计存档，不必粘贴）
   const stylesText = stylesCaption || finalPrompt
   const lyricsText = finalLyrics
+
+  // 按 Unicode 码点计数，与后端 Python len() 口径一致
+  const stylesCount = countChars(stylesText)
+  const lyricsCount = countChars(lyricsText)
+  const overLimit = stylesCount > STYLES_LIMIT || lyricsCount > LYRICS_LIMIT
+
+  /** 复制并反馈：失败时给出可见提示（此前缺陷为静默失败） */
+  const handleCopy = async (key: string, text: string) => {
+    const ok = await copy(key, text)
+    setCopyFailed(!ok)
+    if (!ok) window.setTimeout(() => setCopyFailed(false), 3000)
+  }
 
   const handleValidate = async () => {
     setValidating(true)
@@ -143,10 +157,10 @@ export default function ExportStep() {
             }
             actions={
               <div className="flex items-center gap-3">
-                <CharCounter current={stylesText.length} limit={STYLES_LIMIT} showUnit={false} />
+                <CharCounter current={stylesCount} limit={STYLES_LIMIT} showUnit={false} />
                 <CopyButton
                   copied={copiedKey === 'styles'}
-                  onCopy={() => copy('styles', stylesText)}
+                  onCopy={() => handleCopy('styles', stylesText)}
                   disabled={!stylesText.trim()}
                 />
               </div>
@@ -166,10 +180,10 @@ export default function ExportStep() {
             }
             actions={
               <div className="flex items-center gap-3">
-                <CharCounter current={lyricsText.length} limit={LYRICS_LIMIT} showUnit={false} />
+                <CharCounter current={lyricsCount} limit={LYRICS_LIMIT} showUnit={false} />
                 <CopyButton
                   copied={copiedKey === 'lyrics'}
-                  onCopy={() => copy('lyrics', lyricsText)}
+                  onCopy={() => handleCopy('lyrics', lyricsText)}
                   disabled={!lyricsText.trim()}
                 />
               </div>
@@ -187,20 +201,30 @@ export default function ExportStep() {
             >
               上一步
             </button>
-            <div className="flex gap-3">
-              <button
-                className="px-6 py-3 border border-gold/40 text-gold hover:bg-gold/10 rounded-lg font-medium transition-colors"
-                onClick={handleValidate}
-                disabled={validating}
-              >
-                {validating ? '校验中...' : '重新校验'}
-              </button>
-              <button
-                className="px-8 py-3 bg-vermilion hover:bg-vermilion-light text-rice rounded-lg font-medium transition-colors"
-                onClick={handleExportPack}
-              >
-                导出提示词包 (.txt)
-              </button>
+            <div className="flex flex-col items-end gap-1">
+              {copyFailed && (
+                <span className="text-vermilion-light text-xs">复制失败，请手动全选文本复制</span>
+              )}
+              {overLimit && (
+                <span className="text-vermilion-light text-xs">内容超过 MiniMax 字符上限，请返回精简后再导出</span>
+              )}
+              <div className="flex gap-3">
+                <button
+                  className="px-6 py-3 border border-gold/40 text-gold hover:bg-gold/10 rounded-lg font-medium transition-colors"
+                  onClick={handleValidate}
+                  disabled={validating}
+                >
+                  {validating ? '校验中...' : '重新校验'}
+                </button>
+                <button
+                  className="px-8 py-3 bg-vermilion hover:bg-vermilion-light text-rice rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleExportPack}
+                  disabled={overLimit}
+                  title={overLimit ? '内容超过 MiniMax 字符上限' : undefined}
+                >
+                  导出提示词包 (.txt)
+                </button>
+              </div>
             </div>
           </div>
         </div>

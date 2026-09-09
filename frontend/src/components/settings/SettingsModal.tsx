@@ -9,20 +9,24 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [deepseekKey, setDeepseekKey] = useState('')
   const [qwenKey, setQwenKey] = useState('')
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
       setDeepseekKey(localStorage.getItem('deepseek_api_key') || '')
       setQwenKey(localStorage.getItem('qwen_api_key') || '')
       setSaved(false)
+      setSaveError(null)
     }
   }, [open])
 
   const handleSave = async () => {
     localStorage.setItem('deepseek_api_key', deepseekKey)
     localStorage.setItem('qwen_api_key', qwenKey)
+    // file:// 打包态下相对路径失效，与 api.ts 保持同一回退逻辑
+    const base = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000/api' : '/api'
     try {
-      await fetch('/api/settings/keys', {
+      const resp = await fetch(`${base}/settings/keys`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -30,11 +34,14 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
           qwen_api_key: qwenKey,
         }),
       })
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+      setSaveError(null)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      // 保存失败必须如实提示，不得显示"已保存"（此前缺陷会误导排查方向）
+      setSaved(false)
+      setSaveError('保存失败：后端服务未就绪，请确认服务已启动后重试')
     }
   }
 
@@ -83,6 +90,9 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
           </div>
 
           <div className="flex items-center justify-end gap-3 mt-6">
+            {saveError && (
+              <span className="text-vermilion-light text-sm">{saveError}</span>
+            )}
             {saved && (
               <span className="text-green-400 text-sm">已保存</span>
             )}

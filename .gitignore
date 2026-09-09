@@ -72,3 +72,6 @@ models/
 *.ckpt
 *.safetensors
 *.onnx
+
+# ---------- 运行时密钥文件（设置面板持久化） ----------
+backend/app/.secrets.json

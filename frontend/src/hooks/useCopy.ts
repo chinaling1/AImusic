@@ -38,13 +38,14 @@ export function useCopy(duration: number = FEEDBACK_DURATION) {
   )
 
   const copy = useCallback(
-    async (key: string, text: string) => {
-      if (!text.trim()) return
+    async (key: string, text: string): Promise<boolean> => {
+      if (!text.trim()) return false
       const ok = await copyText(text)
-      if (!ok) return
+      if (!ok) return false
       setCopiedKey(key)
       if (timerRef.current) window.clearTimeout(timerRef.current)
       timerRef.current = window.setTimeout(() => setCopiedKey(null), duration)
+      return true
     },
     [duration]
   )

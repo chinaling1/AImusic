@@ -2,10 +2,18 @@ import CharCounter from '../common/CharCounter'
 import SectionCard from '../common/SectionCard'
 import { LYRICS_LIMIT } from '../../constants/limits'
 
-// MiniMax 网页版歌词框支持的结构标签（点击插入）
-const QUICK_TAGS = ['[Intro]', '[Verse 1]', '[Pre-Chorus]', '[Chorus]', '[Verse 2]', '[Bridge]', '[Interlude]', '[Outro]']
+// MiniMax 网页版歌词框支持的结构标签（点击插入），覆盖全部官方标签
+const QUICK_TAGS = [
+  '[Intro]', '[Verse 1]', '[Verse 2]', '[Pre-Chorus]', '[Chorus]',
+  '[Post-Chorus]', '[Bridge]', '[Interlude]', '[Hook]', '[Solo]', '[Outro]',
+]
 
 const EDITOR_ID = 'lyrics-editor'
+
+/** 与后端 Python len() 对齐的字符计数（按 Unicode 码点，emoji/生僻字不会被多计） */
+export function countChars(text: string): number {
+  return Array.from(text).length
+}
 
 interface LyricEditorProps {
   value: string
@@ -39,7 +47,7 @@ export default function LyricEditor({ value, onChange }: LyricEditorProps) {
   return (
     <SectionCard
       title="歌词编辑器（MiniMax 格式）"
-      actions={<CharCounter current={value.length} limit={LYRICS_LIMIT} />}
+      actions={<CharCounter current={countChars(value)} limit={LYRICS_LIMIT} />}
     >
       <div className="flex flex-wrap gap-2 mb-3">
         {QUICK_TAGS.map((tag) => (

@@ -1,4 +1,13 @@
-const API_BASE = '/api'
+/**
+ * API 基址：
+ * - 开发态（Vite 5173）与 http 部署：走相对路径 /api，由 Vite 代理或同源后端处理
+ * - Electron 打包态（file://）：相对路径会解析为 file:///api/... 导致全部接口失效，
+ *   此时回退到本机后端绝对地址（electron/main.js 会以 8000 端口拉起后端）
+ */
+const API_BASE =
+  typeof window !== 'undefined' && window.location.protocol === 'file:'
+    ? 'http://127.0.0.1:8000/api'
+    : '/api'
 
 async function request(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {

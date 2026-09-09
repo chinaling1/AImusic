@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+# -*- coding: utf-8 -*-
+"""提示词路由（主流程第 1 步）：优化、快速润色、版本历史"""
+from fastapi import APIRouter, HTTPException
 from app.models.schemas import PromptOptimizeRequest, PromptOptimizeResponse
-from app.services.llm_service import llm_service
+from app.services.llm_service import llm_service, LLMServiceError
 from app.database import save_prompt_version
 import uuid
 
@@ -18,7 +20,10 @@ async def optimize_prompt(request: PromptOptimizeRequest):
         session_id=session_id
     )
 
-    optimized = await llm_service.optimize_prompt(request.prompt, request.step)
+    try:
+        optimized = await llm_service.optimize_prompt(request.prompt, request.step)
+    except LLMServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     await save_prompt_version(
         step=request.step,
@@ -36,7 +41,10 @@ async def optimize_prompt(request: PromptOptimizeRequest):
 
 @router.post("/quick-suggest")
 async def quick_suggest(request: dict):
-    suggestion = await llm_service.quick_suggest(request.get("text", ""), request.get("context", ""))
+    try:
+        suggestion = await llm_service.quick_suggest(request.get("text", ""), request.get("context", ""))
+    except LLMServiceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {"suggestion": suggestion}
 
 

@@ -25,5 +25,42 @@ class Settings:
     DATABASE_PATH: str = os.getenv("DATABASE_PATH", "ai_music.db")
     OUTPUT_DIR: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 
+    # 运行时密钥持久化文件（设置面板保存的 Key 写入此处，重启自动恢复；
+    # 已加入 .gitignore，绝不入库）
+    SECRETS_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".secrets.json")
+
 
 settings = Settings()
+
+
+def load_saved_keys() -> dict:
+    """读取设置面板保存的密钥文件（环境变量优先，文件兜底）
+
+    返回 {"deepseek_api_key": str|None, "qwen_api_key": str|None}
+    """
+    import json
+    result = {"deepseek_api_key": None, "qwen_api_key": None}
+    try:
+        with open(settings.SECRETS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for k in result:
+            v = data.get(k)
+            if v:
+                result[k] = v
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass  # 文件损坏时静默降级为未配置，不阻断启动
+    return result
+
+
+def save_keys_to_disk(deepseek_api_key: str = None, qwen_api_key: str = None):
+    """将设置面板保存的密钥写入本地文件（覆盖式，None 表示清除对应项）"""
+    import json
+    data = load_saved_keys()
+    if deepseek_api_key is not None:
+        data["deepseek_api_key"] = deepseek_api_key
+    if qwen_api_key is not None:
+        data["qwen_api_key"] = qwen_api_key
+    with open(settings.SECRETS_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)

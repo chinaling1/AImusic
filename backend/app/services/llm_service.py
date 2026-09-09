@@ -8,11 +8,23 @@
 - call_deepseek_pro / call_deepseek_flash / call_qwen
 - optimize_prompt / generate_lyrics / quick_suggest
 - optimize_score_prompt / generate_score（P1 兜底管线）
+
+健壮性约定：
+- 所有网络/服务端异常统一转译为 LLMServiceError，由路由层转为 502 友好提示
+- 检测 finish_reason == "length"（输出被截断），避免半截内容静默入库
 """
+import logging
+
 from openai import AsyncOpenAI
 
 from app.config import settings
 from app.prompts import prompt_library
+
+logger = logging.getLogger(__name__)
+
+
+class LLMServiceError(Exception):
+    """大模型服务不可用或返回异常时的友好错误（message 可直接展示给用户）"""
 
 
 class LLMService:
@@ -44,7 +56,7 @@ class LLMService:
 
     async def _chat(self, client: AsyncOpenAI, model: str, prompt: str,
                     system_prompt: str = "", **kwargs) -> str:
-        """统一的对话调用（拼装消息 + 透传模型参数）"""
+        """统一的对话调用（拼装消息 + 异常转译 + 截断检测）"""
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
@@ -54,8 +66,19 @@ class LLMService:
         if client is self.deepseek_client and settings.DEEPSEEK_DISABLE_THINKING:
             kwargs.setdefault("extra_body", {"thinking": {"type": "disabled"}})
 
-        response = await client.chat.completions.create(model=model, messages=messages, **kwargs)
-        return response.choices[0].message.content
+        try:
+            response = await client.chat.completions.create(
+                model=model, messages=messages, **kwargs)
+        except Exception as exc:
+            # 网络 / 鉴权 / 限流 / 服务端错误统一转译，原始信息仅记日志
+            logger.warning("LLM 调用失败 model=%s: %s", model, exc)
+            raise LLMServiceError("AI 服务暂时不可用，请稍后重试；若持续失败请检查网络与 API Key 配置") from exc
+
+        choice = response.choices[0]
+        # 输出被 max_tokens 截断时显式报错，避免半截歌词静默入库
+        if choice.finish_reason == "length":
+            raise LLMServiceError("AI 输出因长度限制被截断，请重试；若反复出现请精简创作要求")
+        return choice.message.content
 
     async def call_deepseek_pro(self, prompt: str, system_prompt: str = "") -> str:
         return await self._chat(self.deepseek_client, settings.DEEPSEEK_PRO_MODEL,
@@ -87,10 +110,12 @@ class LLMService:
         return await self.call_deepseek_pro(prompt, system_prompt)
 
     async def quick_suggest(self, text: str, context: str = "") -> str:
-        """轻量润色建议"""
+        """轻量润色建议（输出仅约 50 字，max_tokens 收紧到 200 防止跑飞）"""
         full_prompt = (f"上下文：{context}\n请对以下内容提供简短修改建议：{text}"
                        if context else f"请对以下内容提供简短修改建议：{text}")
-        return await self.call_deepseek_flash(full_prompt, prompt_library.QUICK_SUGGEST_PROMPT)
+        return await self._chat(self.deepseek_client, settings.DEEPSEEK_FLASH_MODEL,
+                                full_prompt, prompt_library.QUICK_SUGGEST_PROMPT,
+                                max_tokens=200, temperature=0.3)
 
     # ---------------- P1 兜底：曲谱生成 ----------------
 

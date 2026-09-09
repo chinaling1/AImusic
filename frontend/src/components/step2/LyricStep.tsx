@@ -51,9 +51,18 @@ export default function LyricStep() {
   const handleConfirm = () => {
     const lyrics = showEditor ? editingLyrics : generatedLyrics
     if (!lyrics.trim() && !instrumental) return
+    // 超过 MiniMax 上限的内容禁止进入导出页（导出即粘贴目标，必须合规）
+    if (lyrics.length > LYRICS_LIMIT && !instrumental) return
     setFinalLyrics(lyrics)
     setStep(2)
   }
+
+  // 确认按钮禁用条件：无内容（非纯音乐）或超限
+  const confirmLyrics = showEditor ? editingLyrics : generatedLyrics
+  const confirmDisabled =
+    (!confirmLyrics.trim() && !instrumental) ||
+    loading ||
+    (!instrumental && confirmLyrics.length > LYRICS_LIMIT)
 
   return (
     <div className="flex flex-col gap-6 py-8">
@@ -116,7 +125,8 @@ export default function LyricStep() {
             <button
               className="px-8 py-3 bg-vermilion hover:bg-vermilion-light text-rice rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleConfirm}
-              disabled={(!generatedLyrics.trim() && !instrumental) || loading}
+              disabled={confirmDisabled}
+              title={confirmLyrics.length > LYRICS_LIMIT && !instrumental ? `歌词超过 ${LYRICS_LIMIT} 字符上限，请精简后再确认` : undefined}
             >
               确认歌词，进入导出
             </button>

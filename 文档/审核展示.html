@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="zh-CN" data-page-node-id="xglJvybkCG0gu2vYQn4HYl">
+<head data-page-node-id="JrnmEVVjU5SPV8KxmTz6HQ">
+<meta charset="utf-8" data-page-node-id="CqBWPEXVaQE3TTBggGvCrT">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="ADb3dd1mJcywFAPiDqfOw3">
 <title>古韵AI · 多智能体审核展示</title>
 <style>
   /* ===== 基础与主题（深色科技风，离线可开） ===== */
@@ -76,90 +76,90 @@
   .foot { text-align: center; color: #66708a; font-size: 12px; margin-top: 34px; }
 </style>
 </head>
-<body>
-<div class="wrap">
+<body data-page-node-id="cCHL6xdPciSR5Vs44kOJaF">
+<div class="wrap" data-page-node-id="OxjDgBOLuAtnqzN8FJG3MH">
 
-  <h1>古韵AI · 多智能体审核展示</h1>
-  <div class="sub">审核时间 2026-09-09 ｜ 方法：4 个独立代理并行只读审核 ｜ 对象：V2.3 MiniMax 提示词工坊</div>
+  <h1 data-page-node-id="qCHE9J7iOLuAgNAwATg5Sp">古韵AI · 多智能体审核展示</h1>
+  <div class="sub" data-page-node-id="eWK6IFnz1IgycVnrmyts3M">审核时间 2026-09-09 ｜ 方法：4 个独立代理并行只读审核 ｜ 对象：V2.3 MiniMax 提示词工坊</div>
 
-  <div class="verdict">
-    <h2>总体结论：有条件通过 —— 无一票否决项命中，9 项 P0 中 4 项当日已修复</h2>
-    <p>四个维度均为「有条件通过」：<b>格式口径与官方一致</b>、<b>歌词专业质量达标</b>、<b>架构解耦合理</b>、<b>素材零侵权风险</b>。
-    主要缺口集中在：<b>作品成品音频尚未产出</b>、<b>原创周期举证薄弱</b>、<b>「本地 LLM」表述必须纠正</b>、
-    以及若干<b>鲁棒性缺陷</b>（异常处理 / 解析容错 / 打包失效）。同日重构已修复其中 4 项，其余按优先级排期。</p>
+  <div class="verdict" data-page-node-id="4dROzTqfCuEJvIPJxgArgr">
+    <h2 data-page-node-id="elzoHD0sGC4LMhAN1vxEKt">总体结论：有条件通过 —— 无一票否决项命中，9 项 P0 中 4 项当日已修复</h2>
+    <p data-page-node-id="vBIvCAlzbh68C4ixTa4XtP">四个维度均为「有条件通过」：<b data-page-node-id="27mF6VexfzoVJiB8D0gosW">格式口径与官方一致</b>、<b data-page-node-id="XcJ6Hgtyu6Wgn7K8Txnuo0">歌词专业质量达标</b>、<b data-page-node-id="Ti5x2MvTVlPMMQphvlt0f2">架构解耦合理</b>、<b data-page-node-id="84uScosDIemdIwjJo8ggu7">素材零侵权风险</b>。
+    主要缺口集中在：<b data-page-node-id="lZVyrWqXY8jQ4o7YAbE7YG">作品成品音频尚未产出</b>、<b data-page-node-id="dE5BPodSGrZ7xLiZUlfV3O">原创周期举证薄弱</b>、<b data-page-node-id="iK2YZfqrKE6lwI4syf1pHm">「本地 LLM」表述必须纠正</b>、
+    以及若干<b data-page-node-id="8q8WZTQp1m0sdEBubhgMod">鲁棒性缺陷</b>（异常处理 / 解析容错 / 打包失效）。同日重构已修复其中 4 项，其余按优先级排期。</p>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <h3>A · MiniMax 格式合规</h3>
-      <span class="tag warn">有条件通过</span>
-      <p>核心口径（歌词 3500 / Styles 2000、英文标签独占一行）与官方一致；校验器存在 4 处误报 / 漏报逻辑缺陷（歌词留空判 error、纯音乐模式仍校验、序号标签放行不全、子串匹配漏报）。</p>
+  <div class="grid" data-page-node-id="LcwalEy9l04rFo774PT5fk">
+    <div class="card" data-page-node-id="TdotJ1FhgGGkzrVWfZ9wKu">
+      <h3 data-page-node-id="NOmI3SS7xjJCCvutlaf8ZU">A · MiniMax 格式合规</h3>
+      <span class="tag warn" data-page-node-id="9zFoYRNb70yDblcfumVDBe">有条件通过</span>
+      <p data-page-node-id="8RUJyQd15Q2M5bKAVLAbOY">核心口径（歌词 3500 / Styles 2000、英文标签独占一行）与官方一致；校验器存在 4 处误报 / 漏报逻辑缺陷（歌词留空判 error、纯音乐模式仍校验、序号标签放行不全、子串匹配漏报）。</p>
     </div>
-    <div class="card">
-      <h3>B · 提示词工程</h3>
-      <span class="tag warn">有条件通过</span>
-      <div class="score">
-        <span>指令清晰度 <b>3.5</b></span><span>输出稳定性 <b>2.5</b></span><span>鲁棒性 <b>2.0</b></span><span>可控性 <b>3.0</b></span><span>领域专业性 <b>4.0</b></span>
+    <div class="card" data-page-node-id="DE9Im85XidfO2rMu9ZnodI">
+      <h3 data-page-node-id="uQY0Mho2tZPSETRF73nalp">B · 提示词工程</h3>
+      <span class="tag warn" data-page-node-id="fyePLzOd8eyUPTrBGaQzVt">有条件通过</span>
+      <div class="score" data-page-node-id="meLz5K7b0DahHmxG3mwuFd">
+        <span data-page-node-id="EA7BIxGAMxLMIqBpGouuxb">指令清晰度 <b data-page-node-id="VNzldNTTMJC80LqYRqx1HU">3.5</b></span><span data-page-node-id="RThTaPmPQYCKPoAStbxTFM">输出稳定性 <b data-page-node-id="xdunRX4t5qEMOsYQj8xeND">2.5</b></span><span data-page-node-id="R25fSgKHPBO0yJMliDamkI">鲁棒性 <b data-page-node-id="TgdBi0zIOs3yIVZFEtMlFA">2.0</b></span><span data-page-node-id="TEMLqFpD2RlErTB7QWmzJG">可控性 <b data-page-node-id="7Ksk9QMGRvUdONnqVEQTdv">3.0</b></span><span data-page-node-id="PnhC2Lev0Dza8yG5KMCMb4">领域专业性 <b data-page-node-id="DfIorw8JAvRBcLX3jCZxRA">4.0</b></span>
       </div>
-      <p>宫/羽调式、轮指、泛音等术语约束有效，端到端实测歌词押韵与结构达标。短板在鲁棒性：解析零容错、无异常处理。</p>
+      <p data-page-node-id="Q67ju4rycA0v9rrjIs5jZC">宫/羽调式、轮指、泛音等术语约束有效，端到端实测歌词押韵与结构达标。短板在鲁棒性：解析零容错、无异常处理。</p>
     </div>
-    <div class="card">
-      <h3>C · 代码质量</h3>
-      <span class="tag warn">有条件通过</span>
-      <p>确定性校验器与 LLM 解耦、主流程三步闭环为亮点。P0：Electron 打包态 API_BASE 失效、API Key 仅内存易失。死代码与依赖冗余已在当日重构清除。</p>
+    <div class="card" data-page-node-id="enIKsCdPH4GvUjLYyKWUWp">
+      <h3 data-page-node-id="iZ8BtuJtVrDMFrTwJ4Hgs6">C · 代码质量</h3>
+      <span class="tag warn" data-page-node-id="xUmwFlbOgEjsM28gYB7lHM">有条件通过</span>
+      <p data-page-node-id="Ap90AHHBhdCC7iS6tJzE4T">确定性校验器与 LLM 解耦、主流程三步闭环为亮点。P0：Electron 打包态 API_BASE 失效、API Key 仅内存易失。死代码与依赖冗余已在当日重构清除。</p>
     </div>
-    <div class="card">
-      <h3>D · 参赛合规</h3>
-      <span class="tag warn">有条件通过</span>
-      <p>素材零侵权、主题（匠心传承 / 非遗）方向安全。必补：成品音频、水印检测与授权凭证、创作过程说明四要素、原创周期举证强化。</p>
+    <div class="card" data-page-node-id="ANad8LPbdLzpTXPDpEl4yn">
+      <h3 data-page-node-id="KLrkX6MOlqO9C6AEDkzMCp">D · 参赛合规</h3>
+      <span class="tag warn" data-page-node-id="X2KtrKjpKOzfE5jdDaQ32X">有条件通过</span>
+      <p data-page-node-id="FLcfFIpfAbsigDSXeIK9aZ">素材零侵权、主题（匠心传承 / 非遗）方向安全。必补：成品音频、水印检测与授权凭证、创作过程说明四要素、原创周期举证强化。</p>
     </div>
   </div>
 
-  <section>
-    <h2>P0 问题清单</h2>
-    <table>
-      <tr><th>级别</th><th>问题</th><th>影响</th><th>状态</th></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>"本地 LLM"表述与实现不符（实为云端 DeepSeek/Qwen API）</td><td>答辩追问即失分，事实性风险</td><td class="st todo">立即纠正（文档已统一）</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>成品音频（mp3/wav）为零</td><td>无音频无法提交</td><td class="st todo">9/20 前必须产出</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>MiniMax 输出水印 / 元数据未检测，商用授权凭证未留存</td><td>一票否决风险（违规水印）</td><td class="st todo">订阅后首测</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>创作过程说明四要素与版权声明未成文</td><td>技术规范与文档 15 分缺失</td><td class="st todo">9/20 前成文</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>导出提示词包举证字段不足</td><td>证据链不完整</td><td class="st todo">补 8 类字段</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>Electron 打包态 API_BASE 在 file:// 下失效</td><td>打包版主流程全废</td><td class="st confirm">待确认（打包方案后修）</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>API Key 仅存内存，重启即丢且失败仍提示"已保存"</td><td>演示现场静默失效</td><td class="st confirm">待确认（落盘 .env）</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>提示词分隔标记解析零容错</td><td>AI 返回变体即静默降级</td><td class="st todo">待修复</td></tr>
-      <tr><td><span class="lv p0">P0</span></td><td>LLM 调用无异常捕获 / 重试</td><td>失败时前端不友好</td><td class="st part">部分修复（已设超时）</td></tr>
+  <section data-page-node-id="QoIMttrLKJCmveM7cL5J8P">
+    <h2 data-page-node-id="y3ydal8SF2XDhG7Tuocv7O">P0 问题清单</h2>
+    <table data-page-node-id="5ahU8gFD5ems6vlLoQAk7w">
+      <tr data-page-node-id="JTXmABCXJ6XgFPT9ShNGNz"><th data-page-node-id="J0pho2lFjHBFGGnnPyYhvg">级别</th><th data-page-node-id="X0PQ8619dUdhKWUAeE9Oo2">问题</th><th data-page-node-id="6DkYDXEKoh5oKcLtZsZB6G">影响</th><th data-page-node-id="JSnJLw8gutr1jOkBvgWwUD">状态</th></tr>
+      <tr data-page-node-id="c9TxWhBXvVXg1e3yACQ6pt"><td data-page-node-id="nFiqWcwDLXSIUYHe8VPACK"><span class="lv p0" data-page-node-id="H1L1QY9IWelCvLDExGG94Y">P0</span></td><td data-page-node-id="sEKvdIt1YesDkFWBzse6J6">"本地 LLM"表述与实现不符（实为云端 DeepSeek/Qwen API）</td><td data-page-node-id="hdY9Xi3D7Ed0OsDhXMsmgB">答辩追问即失分，事实性风险</td><td class="st todo" data-page-node-id="x36o4yJ4LwBHWNgC8XGoJS">立即纠正（文档已统一）</td></tr>
+      <tr data-page-node-id="yrGgRoVyDn3dgnaUXmtg25"><td data-page-node-id="jh3xLsaihWPDouc5cZ6PCo"><span class="lv p0" data-page-node-id="WkkVUY0SpTIlLkn0YgWXeL">P0</span></td><td data-page-node-id="uDl8IWJ0Ml06Wn4Qy1OCsW">成品音频（mp3/wav）为零</td><td data-page-node-id="8ErJ9lwxVDrEM8Db4ghRDT">无音频无法提交</td><td class="st todo" data-page-node-id="eOcoQiPvW1rKPMGmmBLpxk">9/20 前必须产出</td></tr>
+      <tr data-page-node-id="a2nL7Pl9Pcr0Zd0MC11lSD"><td data-page-node-id="wGHKmPBMNzEpfqziXNUKy9"><span class="lv p0" data-page-node-id="sFRWK4giWIU7kyyDT4lOFn">P0</span></td><td data-page-node-id="mkv70w3BhCznoFazO1cMM8">MiniMax 输出水印 / 元数据未检测，商用授权凭证未留存</td><td data-page-node-id="DLMHWEAN9FUqVnC06CPJfx">一票否决风险（违规水印）</td><td class="st todo" data-page-node-id="TZgiHOFQxS7FsVPkw7STEb">订阅后首测</td></tr>
+      <tr data-page-node-id="groFUXfXnNq1efULbT1k2p"><td data-page-node-id="Ff97CfyRg9DCMejuZ4tuWu"><span class="lv p0" data-page-node-id="qHzDeArDOeC3BlUcEhfVB9">P0</span></td><td data-page-node-id="uC31iOCdm6VSdmYBQAn0jK">创作过程说明四要素与版权声明未成文</td><td data-page-node-id="TquD7AbPbBDRbkmeAJhKED">技术规范与文档 15 分缺失</td><td class="st todo" data-page-node-id="UVnsQHiVmPYDtRTCTA37Mq">9/20 前成文</td></tr>
+      <tr data-page-node-id="rGiZvh8rXTt5eee1NVCPao"><td data-page-node-id="QtazVzzXv9gwa6lGInhb2t"><span class="lv p0" data-page-node-id="XNhmq0Q4A90Du1Mx5Ir25y">P0</span></td><td data-page-node-id="lx2Z1NXBfY1JKsUtC3RlrQ">导出提示词包举证字段不足</td><td data-page-node-id="GspFW0C4BEUpBUBbchU5Nb">证据链不完整</td><td class="st todo" data-page-node-id="H6lzbhmiR6IBbiWRdfSGCW">补 8 类字段</td></tr>
+      <tr data-page-node-id="w60z9981GBhF0zLq5DLPHe"><td data-page-node-id="7kJL4AuO0ZshON6FfeUvVo"><span class="lv p0" data-page-node-id="Yh8vGFF4RrOTycBIU58ZFm">P0</span></td><td data-page-node-id="Dt46HsDBKUaW4L3jmemB5s">Electron 打包态 API_BASE 在 file:// 下失效</td><td data-page-node-id="FnRXYj8Od4CGANelBlq2Mn">打包版主流程全废</td><td class="st confirm" data-page-node-id="yLIKjH1safSjANmbqAe8HR">待确认（打包方案后修）</td></tr>
+      <tr data-page-node-id="jVOHOVP4oVa48kDGnPHWaY"><td data-page-node-id="OvcFElYmxSxBWKZUXoS4KD"><span class="lv p0" data-page-node-id="B13Fkt6jvbMg2gSCOMtsq9">P0</span></td><td data-page-node-id="Asj6C16vKV3VoaaWTDkRiV">API Key 仅存内存，重启即丢且失败仍提示"已保存"</td><td data-page-node-id="ssB41uUHoq4BF9u0GJwaWF">演示现场静默失效</td><td class="st confirm" data-page-node-id="4yI9cKZRUmDaXlEqB3T4FU">待确认（落盘 .env）</td></tr>
+      <tr data-page-node-id="eyyKtX8x1HrDjVGI904vmu"><td data-page-node-id="MjzrBeTVf7nnxKYmOlbWMn"><span class="lv p0" data-page-node-id="BSpH7AGMA1vI8hahRHYRrH">P0</span></td><td data-page-node-id="oknHq4oUb8Fey7gIfYXClR">提示词分隔标记解析零容错</td><td data-page-node-id="IElybw6Dea5MHBSo7OAf9r">AI 返回变体即静默降级</td><td class="st todo" data-page-node-id="uQLkYfxLClJ4yqeBUSSyEH">待修复</td></tr>
+      <tr data-page-node-id="PMhmeuGmGLxpWOC7fwovWV"><td data-page-node-id="NSyrWW0AiFLGYA4q7lZWyW"><span class="lv p0" data-page-node-id="izJlbPH09iscJbY1ShPQG6">P0</span></td><td data-page-node-id="ASucbMPaiEiQrwB723yTkc">LLM 调用无异常捕获 / 重试</td><td data-page-node-id="ECcLgYslM6VGu0vcJtVB0B">失败时前端不友好</td><td class="st part" data-page-node-id="dYjBI2TGz56PgaTajptNTo">部分修复（已设超时）</td></tr>
     </table>
   </section>
 
-  <section>
-    <h2>本次重构已修复项（2026-09-09）</h2>
-    <ul class="fixed-list">
-      <li>后端：music21 延迟导入，兜底管线不再拖累启动；启动路径实测与"仅主流程"持平</li>
-      <li>后端：system prompt 全部集中至 prompt_library 模块，新增禁止围栏 / 韵部硬约束 / 纯音乐分支条款</li>
-      <li>后端：删除恒等函数 lrc_utils；统一 _chat 消除三段重复调用代码；客户端显式超时 300s</li>
-      <li>前端：abcjs / tone / midi-player-js 三个重依赖移除；4 个兜底组件移入 legacy/（约 670 行移出主构建）</li>
-      <li>前端：抽取 SectionCard / CharCounter / CopyButton 公共组件与 useCopy hook；字符上限常量化</li>
-      <li>前端：store 增加 persist version/migrate/partialize，sessionId 初始化，legacy 字段自动清理</li>
-      <li>清理：零引用资产 hero.png / react.svg / vite.svg / icons.svg 删除；SRS 更新 V2.3 修订记录</li>
+  <section data-page-node-id="WjAN2h1fmr0UKabdHzw4eG">
+    <h2 data-page-node-id="3T4pwEduBlVQWu0B7YRCyf">本次重构已修复项（2026-09-09）</h2>
+    <ul class="fixed-list" data-page-node-id="JI0icYuxDVi4BW1apZNIko">
+      <li data-page-node-id="Sp0pJjyuGrNBErFZGlxAjs">后端：music21 延迟导入，兜底管线不再拖累启动；启动路径实测与"仅主流程"持平</li>
+      <li data-page-node-id="EPB74Qk3cJYTjS4am4mviO">后端：system prompt 全部集中至 prompt_library 模块，新增禁止围栏 / 韵部硬约束 / 纯音乐分支条款</li>
+      <li data-page-node-id="aJ5yAxn13wUTwQVtNVHKZU">后端：删除恒等函数 lrc_utils；统一 _chat 消除三段重复调用代码；客户端显式超时 300s</li>
+      <li data-page-node-id="8fYWUw9ARWV0zMzotJmMic">前端：abcjs / tone / midi-player-js 三个重依赖移除；4 个兜底组件移入 legacy/（约 670 行移出主构建）</li>
+      <li data-page-node-id="sOXa9xO5tj85PWT7Wlw4eX">前端：抽取 SectionCard / CharCounter / CopyButton 公共组件与 useCopy hook；字符上限常量化</li>
+      <li data-page-node-id="BYU2zDknL0N5PUvizMsiZq">前端：store 增加 persist version/migrate/partialize，sessionId 初始化，legacy 字段自动清理</li>
+      <li data-page-node-id="n4gSMbj21hCoqGo2U0IYJj">清理：零引用资产 hero.png / react.svg / vite.svg / icons.svg 删除；SRS 更新 V2.3 修订记录</li>
     </ul>
   </section>
 
-  <section>
-    <h2>修复优先级（距 9-20 完成硬线）</h2>
-    <table>
-      <tr><th>#</th><th>时间</th><th>事项</th></tr>
-      <tr><td>①</td><td>立即</td><td>全部材料纠正"本地 LLM"表述</td></tr>
-      <tr><td>②</td><td>本周</td><td>MiniMax 订阅 + 测试曲查水印 + 留存授权凭证</td></tr>
-      <tr><td>③</td><td>本周</td><td>出第一首成品 mp3（本工具生成提示词 → 网页版生成）</td></tr>
-      <tr><td>④</td><td>本周</td><td>Electron 打包 API_BASE 修复（若演示用 exe）</td></tr>
-      <tr><td>⑤</td><td>次周</td><td>校验器 4 项 P1 缺陷修复 + 音乐层规则增强（五声性 / 调式一致性 / 韵脚对齐）</td></tr>
-      <tr><td>⑥</td><td>次周</td><td>解析容错 + 异常捕获 + 复制反馈 + 超限禁用按钮</td></tr>
-      <tr><td>⑦</td><td>持续</td><td>每日 git 提交 + 导出包补 8 类举证字段</td></tr>
-      <tr><td>⑧</td><td>9/15+</td><td>创作过程说明 / 版权声明 / 演示视频 / PDF / 源码包</td></tr>
+  <section data-page-node-id="oTgmB6oSiBzFpObqrHQQKJ">
+    <h2 data-page-node-id="UKzZ6ClqcQEFtj8BkayyHC">修复优先级（距 9-20 完成硬线）</h2>
+    <table data-page-node-id="cqBUWb533EISyHFCbadIW7">
+      <tr data-page-node-id="VcxKASg5x6xSPBAxAXBdOY"><th data-page-node-id="WhhWn5z2sqAvnywmmBq83Q">#</th><th data-page-node-id="CgntiO4BtVKNTwrs11Klcy">时间</th><th data-page-node-id="hcWAxqh4TxNRPxP0sKDmZ8">事项</th></tr>
+      <tr data-page-node-id="RVTP9fpwItpE0haEfaaDHF"><td data-page-node-id="4n31tVzhIVfJMAPcWI9izY">①</td><td data-page-node-id="g2AGbLAWLdWUgwhKSJoE9F">立即</td><td data-page-node-id="VVdDHvl27gtrYxYC2ONMNK">全部材料纠正"本地 LLM"表述</td></tr>
+      <tr data-page-node-id="JDEGrnKm9vDphJFnndVu0i"><td data-page-node-id="N5JCJEBbY56BjdDmo9SOOX">②</td><td data-page-node-id="9JbH0Vf4t42KVHwfDuiWxE">本周</td><td data-page-node-id="0bDwil3Md1zdMQuZi2G8ER">MiniMax 订阅 + 测试曲查水印 + 留存授权凭证</td></tr>
+      <tr data-page-node-id="wUHFHJwDTuUC0AoMHAEwF4"><td data-page-node-id="HPeV9nHbHOuCnwB26cDunR">③</td><td data-page-node-id="DZxnpgG7CjklYgKi2hYzec">本周</td><td data-page-node-id="ezfgH0uhMv0MJqqUuCOxxW">出第一首成品 mp3（本工具生成提示词 → 网页版生成）</td></tr>
+      <tr data-page-node-id="PIfM4bSDvEAyZBztio2pT2"><td data-page-node-id="TFtde1vCvbHG5IxXFC6m81">④</td><td data-page-node-id="p3eVqVwZRdR3B6hTC1mfg0">本周</td><td data-page-node-id="js1TFNxQo2EE2CDitt6nDr">Electron 打包 API_BASE 修复（若演示用 exe）</td></tr>
+      <tr data-page-node-id="fVfGfoS303U3q7N38Zf8Km"><td data-page-node-id="Wz3PsX8C8SqW9lHvxcUB8G">⑤</td><td data-page-node-id="Ii5fNPvXpRxXT5IxRWFhnB">次周</td><td data-page-node-id="Nh35xIZ15SnnD1oa7GO2ud">校验器 4 项 P1 缺陷修复 + 音乐层规则增强（五声性 / 调式一致性 / 韵脚对齐）</td></tr>
+      <tr data-page-node-id="LiSI5HKUTTX1C2eQvQIX5j"><td data-page-node-id="wagHhUMymQ8nvdVCYwzfoT">⑥</td><td data-page-node-id="TUUJtNLyAiPdC4EZ43Ki8A">次周</td><td data-page-node-id="9XcjB5TOu1E8AY9PRROgvR">解析容错 + 异常捕获 + 复制反馈 + 超限禁用按钮</td></tr>
+      <tr data-page-node-id="qJr9cxS8Mhaw4BI2gosvtC"><td data-page-node-id="UGoIqOho1Zo2wJEOWtXqks">⑦</td><td data-page-node-id="Ik0AGoVM97SPJwtV5z4iOL">持续</td><td data-page-node-id="u9gJ2qzDUPBvmsCxRRZ7oZ">每日 git 提交 + 导出包补 8 类举证字段</td></tr>
+      <tr data-page-node-id="sEKOr9osfRtMPvcOlvXBNr"><td data-page-node-id="X7YCbnB0BkTwTck2sfgtFN">⑧</td><td data-page-node-id="RBi1qjXymaYQG0Gb1GaTfF">9/15+</td><td data-page-node-id="RKw9BqIyuybOEwvuEjCijc">创作过程说明 / 版权声明 / 演示视频 / PDF / 源码包</td></tr>
     </table>
   </section>
 
-  <div class="foot">数据来源：4 个审核代理对源码的实读（文件:行号可追溯）＋ 2026-09-09 真实端到端调用样例 ｜ 完整报告见《多智能体审核报告.md》</div>
+  <div class="foot" data-page-node-id="3wLijzLUKDkkBvLbPIMGQY">数据来源：4 个审核代理对源码的实读（文件:行号可追溯）＋ 2026-09-09 真实端到端调用样例 ｜ 完整报告见《多智能体审核报告.md》</div>
 </div>
 </body>
 </html>

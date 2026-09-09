@@ -4,14 +4,17 @@ import { api } from '../../services/api'
 import PromptHistoryDrawer from '../common/PromptHistoryDrawer'
 import SectionCard from '../common/SectionCard'
 
-/** 解析 LLM 输出的 ===META=== / ===STYLES=== 分段 */
-function parseSections(raw: string): { meta: string; styles: string } {
-  const metaMatch = raw.match(/===META===\s*([\s\S]*?)(?====STYLES===|$)/)
-  const stylesMatch = raw.match(/===STYLES===\s*([\s\S]*)$/)
-  return {
-    meta: (metaMatch?.[1] || '').trim(),
-    styles: (stylesMatch?.[1] || '').trim(),
-  }
+/**
+ * 解析 LLM 输出的 META / STYLES 分段（容错版）
+ * 兼容：===META=== / === META === / ==meta== 等大小写与空格变体
+ * 返回 parsed=false 表示两段标记都未命中（AI 返回了异常格式）
+ */
+function parseSections(raw: string): { meta: string; styles: string; parsed: boolean } {
+  const metaMatch = raw.match(/=+\s*META\s*=+\s*([\s\S]*?)(?:=+\s*STYLES\s*=+|$)/i)
+  const stylesMatch = raw.match(/=+\s*STYLES\s*=+\s*([\s\S]*)$/i)
+  const meta = (metaMatch?.[1] || '').trim()
+  const styles = (stylesMatch?.[1] || '').trim()
+  return { meta, styles, parsed: Boolean(metaMatch || stylesMatch) }
 }
 
 /** AI 优化结果编辑区：元标签 + 风格描述两个可编辑文本域 */
@@ -96,10 +99,21 @@ export default function PromptStep() {
   const [showOptimized, setShowOptimized] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
 
-  /** 把 AI 结果写回 store 并记录一个版本 */
-  const applyResult = (optimized: string, note?: string) => {
+  /**
+   * 把 AI 结果写回 store 并记录一个版本
+   * @param silent true 时不弹"格式无法识别"错误（用于快速润色等无分段格式的场景）
+   * @returns 是否成功解析为分段格式
+   */
+  const applyResult = (optimized: string, note?: string, silent = false): boolean => {
+    const { meta, styles, parsed } = parseSections(optimized)
+    if (!parsed || (!meta && !styles)) {
+      if (!silent) {
+        // AI 返回了无法识别的格式：不覆盖现有内容，让用户直接重试
+        setError('AI 返回了无法识别的格式，请点击重试；若反复出现请调整创意描述')
+      }
+      return false
+    }
     setOptimizedPrompt(optimized)
-    const { meta, styles } = parseSections(optimized)
     setMetaTags(meta)
     setStylesCaption(styles)
     setEditedMeta(meta)
@@ -115,6 +129,7 @@ export default function PromptStep() {
       note,
     }
     addPromptVersion(version)
+    return true
   }
 
   const runWithLoading = async (task: () => Promise<void>, fallbackError: string) => {
@@ -142,7 +157,14 @@ export default function PromptStep() {
     if (!text.trim()) return
     void runWithLoading(async () => {
       const result = await api.quickSuggest(text, 'MiniMax古风音乐提示词润色')
-      applyResult(result.suggestion || '', '快速润色')
+      // 快速润色返回的是整段建议文本（无 META/STYLES 分段），silent 解析后兜底为纯风格描述
+      const suggestion = result.suggestion || ''
+      if (!applyResult(suggestion, '快速润色', true) && suggestion.trim()) {
+        setOptimizedPrompt(suggestion)
+        setStylesCaption(suggestion)
+        setEditedStyles(suggestion)
+        setShowOptimized(true)
+      }
     }, '快速润色失败')
   }
 
@@ -170,7 +192,13 @@ export default function PromptStep() {
   }
 
   const handleRestore = (version: PromptVersion) => {
-    applyResult(version.content, `回溯至 ${version.timestamp}`)
+    // 历史版本可能是无分段格式的纯文本（如快速润色结果），silent 解析后兜底
+    if (!applyResult(version.content, `回溯至 ${version.timestamp}`, true) && version.content.trim()) {
+      setOptimizedPrompt(version.content)
+      setStylesCaption(version.content)
+      setEditedStyles(version.content)
+      setShowOptimized(true)
+    }
     setShowHistory(false)
   }
 
