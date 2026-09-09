@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMusicStore, type PromptVersion } from '../../store/musicStore'
 import { api } from '../../services/api'
 import PromptHistoryDrawer from '../common/PromptHistoryDrawer'
+import SectionCard from '../common/SectionCard'
 
 /** 解析 LLM 输出的 ===META=== / ===STYLES=== 分段 */
 function parseSections(raw: string): { meta: string; styles: string } {
@@ -11,6 +12,76 @@ function parseSections(raw: string): { meta: string; styles: string } {
     meta: (metaMatch?.[1] || '').trim(),
     styles: (stylesMatch?.[1] || '').trim(),
   }
+}
+
+/** AI 优化结果编辑区：元标签 + 风格描述两个可编辑文本域 */
+function OptimizedEditor({
+  meta,
+  styles,
+  onMetaChange,
+  onStylesChange,
+}: {
+  meta: string
+  styles: string
+  onMetaChange: (value: string) => void
+  onStylesChange: (value: string) => void
+}) {
+  return (
+    <SectionCard title="结构化元标签（Structured Caption · 可编辑）">
+      <textarea
+        className="w-full h-44 bg-ink border border-gold/20 rounded-lg p-4 text-rice text-sm font-mono placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none leading-6"
+        value={meta}
+        onChange={(e) => onMetaChange(e.target.value)}
+        placeholder={'[Genre] ...\n[BPM] ...\n[Key] ...\n[Vocals] ...\n[Instruments] ...\n[Arrangement] ...'}
+      />
+      <label className="block text-gold text-sm font-medium mt-6 mb-3">
+        风格描述（Styles 输入框内容 · 可编辑）
+      </label>
+      <textarea
+        className="w-full h-24 bg-ink border border-gold/20 rounded-lg p-4 text-rice text-sm placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none leading-6"
+        value={styles}
+        onChange={(e) => onStylesChange(e.target.value)}
+        placeholder="一段连贯的风格描述，粘贴到 MiniMax 的 Styles 输入框"
+      />
+    </SectionCard>
+  )
+}
+
+/** 右栏：当前提示词 + 历史入口 + 创作提示 */
+function PromptSidebar({
+  prompt,
+  versionCount,
+  onOpenHistory,
+}: {
+  prompt: string
+  versionCount: number
+  onOpenHistory: () => void
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <SectionCard title="当前提示词">
+        <div className="text-rice text-sm leading-relaxed whitespace-pre-wrap">
+          {prompt || '尚未输入提示词'}
+        </div>
+      </SectionCard>
+
+      <button
+        className="w-full px-4 py-3 border border-gold/30 text-gold hover:bg-gold/10 rounded-lg transition-colors text-sm"
+        onClick={onOpenHistory}
+      >
+        查看提示词历史 ({versionCount})
+      </button>
+
+      <SectionCard title="创作提示">
+        <ul className="text-rice-dark text-xs space-y-2 leading-relaxed">
+          <li>• 描述音乐意境，如"月下独酌、清风拂柳"</li>
+          <li>• 指定情感基调，如"婉约、豪放、清幽"</li>
+          <li>• 说明乐器偏好，如"以古筝为主，笛子对答"</li>
+          <li>• 元标签含 Genre/BPM/Key/Vocals/Instruments/Arrangement 六项，对应手册要求的元标签设计</li>
+        </ul>
+      </SectionCard>
+    </div>
+  )
 }
 
 export default function PromptStep() {
@@ -25,6 +96,7 @@ export default function PromptStep() {
   const [showOptimized, setShowOptimized] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
 
+  /** 把 AI 结果写回 store 并记录一个版本 */
   const applyResult = (optimized: string, note?: string) => {
     setOptimizedPrompt(optimized)
     const { meta, styles } = parseSections(optimized)
@@ -45,33 +117,33 @@ export default function PromptStep() {
     addPromptVersion(version)
   }
 
-  const handleOptimize = async () => {
-    if (!originalPrompt.trim()) return
+  const runWithLoading = async (task: () => Promise<void>, fallbackError: string) => {
     setLoading(true)
     setError(null)
     try {
-      const result = await api.optimizePrompt(originalPrompt, 'prompt', sessionId)
-      applyResult(result.optimized_prompt || result.content || '')
+      await task()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'AI优化失败')
+      setError(err instanceof Error ? err.message : fallbackError)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleQuickSuggest = async () => {
+  const handleOptimize = () => {
+    if (!originalPrompt.trim()) return
+    void runWithLoading(async () => {
+      const result = await api.optimizePrompt(originalPrompt, 'prompt', sessionId)
+      applyResult(result.optimized_prompt || '')
+    }, 'AI优化失败')
+  }
+
+  const handleQuickSuggest = () => {
     const text = showOptimized ? `${editedMeta}\n${editedStyles}` : originalPrompt
     if (!text.trim()) return
-    setLoading(true)
-    setError(null)
-    try {
+    void runWithLoading(async () => {
       const result = await api.quickSuggest(text, 'MiniMax古风音乐提示词润色')
-      applyResult(result.suggestion || result.content || '', '快速润色')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '快速润色失败')
-    } finally {
-      setLoading(false)
-    }
+      applyResult(result.suggestion || '', '快速润色')
+    }, '快速润色失败')
   }
 
   const handleConfirm = () => {
@@ -111,8 +183,7 @@ export default function PromptStep() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 flex flex-col gap-6">
-          <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-            <label className="block text-gold text-sm font-medium mb-3">创意描述</label>
+          <SectionCard title="创意描述">
             <textarea
               className="w-full h-32 bg-ink border border-gold/20 rounded-lg p-4 text-rice placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none"
               placeholder="描述你想要创作的古风音乐，如：写一首以匠心传承为主题的古风歌，古筝与笛子对答，副歌大气磅礴..."
@@ -135,29 +206,15 @@ export default function PromptStep() {
                 快速润色
               </button>
             </div>
-          </div>
+          </SectionCard>
 
           {showOptimized && (
-            <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-              <label className="block text-gold text-sm font-medium mb-3">
-                结构化元标签（Structured Caption · 可编辑）
-              </label>
-              <textarea
-                className="w-full h-44 bg-ink border border-gold/20 rounded-lg p-4 text-rice text-sm font-mono placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none leading-6"
-                value={editedMeta}
-                onChange={(e) => setEditedMeta(e.target.value)}
-                placeholder={'[Genre] ...\n[BPM] ...\n[Key] ...\n[Vocals] ...\n[Instruments] ...\n[Arrangement] ...'}
-              />
-              <label className="block text-gold text-sm font-medium mt-6 mb-3">
-                风格描述（Styles 输入框内容 · 可编辑）
-              </label>
-              <textarea
-                className="w-full h-24 bg-ink border border-gold/20 rounded-lg p-4 text-rice text-sm placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 resize-none leading-6"
-                value={editedStyles}
-                onChange={(e) => setEditedStyles(e.target.value)}
-                placeholder="一段连贯的风格描述，粘贴到 MiniMax 的 Styles 输入框"
-              />
-            </div>
+            <OptimizedEditor
+              meta={editedMeta}
+              styles={editedStyles}
+              onMetaChange={setEditedMeta}
+              onStylesChange={setEditedStyles}
+            />
           )}
 
           <div className="flex justify-end">
@@ -171,31 +228,11 @@ export default function PromptStep() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-            <h3 className="text-gold text-sm font-medium mb-3">当前提示词</h3>
-            <div className="text-rice text-sm leading-relaxed whitespace-pre-wrap">
-              {finalPrompt || originalPrompt || '尚未输入提示词'}
-            </div>
-          </div>
-
-          <button
-            className="w-full px-4 py-3 border border-gold/30 text-gold hover:bg-gold/10 rounded-lg transition-colors text-sm"
-            onClick={() => setShowHistory(true)}
-          >
-            查看提示词历史 ({promptVersions.length})
-          </button>
-
-          <div className="bg-ink-light border border-gold/20 rounded-xl p-6">
-            <h3 className="text-gold text-sm font-medium mb-3">创作提示</h3>
-            <ul className="text-rice-dark text-xs space-y-2 leading-relaxed">
-              <li>• 描述音乐意境，如"月下独酌、清风拂柳"</li>
-              <li>• 指定情感基调，如"婉约、豪放、清幽"</li>
-              <li>• 说明乐器偏好，如"以古筝为主，笛子对答"</li>
-              <li>• 元标签含 Genre/BPM/Key/Vocals/Instruments/Arrangement 六项，对应手册要求的元标签设计</li>
-            </ul>
-          </div>
-        </div>
+        <PromptSidebar
+          prompt={finalPrompt || originalPrompt}
+          versionCount={promptVersions.length}
+          onOpenHistory={() => setShowHistory(true)}
+        />
       </div>
 
       <PromptHistoryDrawer

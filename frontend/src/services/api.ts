@@ -37,20 +37,4 @@ export const api = {
 
   getMiniMaxFormatSpec: () =>
     request('/minimax/format-spec'),
-
-  // ---- 本地曲谱/MIDI 兜底管线（P1 备用，主流程不经过）----
-  exportLrc: (lrcContent: string, filename?: string) =>
-    request('/lyric/export', { method: 'POST', body: JSON.stringify({ lrc_content: lrcContent, filename: filename || 'lyrics.lrc' }) }),
-
-  optimizeScorePrompt: (prompt: string, sessionId?: string) =>
-    request('/score/optimize-prompt', { method: 'POST', body: JSON.stringify({ prompt, session_id: sessionId }) }),
-
-  generateScore: (lyrics: string, style?: string, sessionId?: string) =>
-    request('/score/generate', { method: 'POST', body: JSON.stringify({ lyrics, style, session_id: sessionId }) }),
-
-  renderAudio: (abcNotation: string) =>
-    request('/score/render-audio', { method: 'POST', body: JSON.stringify({ abc_notation: abcNotation }) }),
-
-  generateMidi: (abcNotation: string, sessionId?: string) =>
-    request('/midi/generate', { method: 'POST', body: JSON.stringify({ abc_notation: abcNotation, session_id: sessionId }) }),
 }

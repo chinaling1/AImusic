@@ -11,12 +11,9 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
-    "abcjs": "^6.6.3",
-    "midi-player-js": "^2.0.17",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "tailwindcss": "^4.3.0",
-    "tone": "^15.1.22",
     "zustand": "^5.0.13"
   },
   "devDependencies": {
