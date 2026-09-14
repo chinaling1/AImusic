@@ -75,3 +75,5 @@ models/
 
 # ---------- 运行时密钥文件（设置面板持久化） ----------
 backend/app/.secrets.json
+build-py/
+exe_test*.log

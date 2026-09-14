@@ -22,6 +22,10 @@ from datetime import datetime
 OUT_PATH = Path(r"G:\cunchu\大学\作业\AI音乐\文档\古韵AI-设计与开发文档-V2.3.docx")
 OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+DIAG_DIR = Path(r"G:\cunchu\大学\作业\AI音乐\scripts\diagrams")
+DIAG_OVERALL = DIAG_DIR / "arch_overall.png"
+DIAG_MODULES = DIAG_DIR / "arch_modules.png"
+
 # -------------------- 排版常量 --------------------
 FONT_CN = "宋体"
 FONT_EN = "Times New Roman"
@@ -168,6 +172,22 @@ def add_page_break(doc):
     p = doc.add_paragraph()
     r = p.add_run()
     r.add_break(WD_BREAK.PAGE)
+
+
+def add_image(doc, image_path: Path, caption: str | None = None, max_width_cm: float = 15.5):
+    """居中插入图片（按宽度等比缩放），可选带题注"""
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(6)
+    p.paragraph_format.space_after = Pt(2)
+    r = p.add_run()
+    r.add_picture(str(image_path), width=Cm(max_width_cm))
+    if caption:
+        cp = doc.add_paragraph()
+        cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        cp.paragraph_format.space_after = Pt(8)
+        cr = cp.add_run(caption)
+        set_run_font(cr, size_pt=9, color=COLOR_GREY, font_cn=FONT_HEADING_CN)
 
 
 def configure_page(doc):
@@ -354,74 +374,15 @@ add_heading(doc, "第二章  概要设计", 1)
 
 add_heading(doc, "2.1  总体架构", 2)
 add_para(doc, "采用「LLM 提示词工程 + 确定性校验算法 + 用户粘贴到 MiniMax 渲染」的混合架构，"
-              "前端、后端、外部生成平台三层解耦，每层都可独立替换。",
+              "前端、后端、外部生成平台三层解耦，每层都可独立替换。整体数据流如下：",
          indent_first=0.74, space_after=6)
-
-add_code_block(doc,
-"""┌────────────────────────────────────────────────────────────────────────┐
-│  ① 创作者（专业音乐人）                                                  │
-└──────────────┬─────────────────────────────────────────────────────────┘
-               │ 输入创意 / 选择押韵 / 切换模式
-               ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│  ② 前端（React 19 + TS + Vite + Tailwind + Zustand）                   │
-│   · AppLayout / StepIndicator / 三个步骤组件                              │
-│   · 状态：currentStep / promptVersions / metaTags / stylesCaption / ...  │
-│   · 自动持久化到 localStorage（瞬时状态除外）                              │
-└──────────────┬─────────────────────────────────────────────────────────┘
-               │ /api/{prompt,lyric,minimax,settings}
-               ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│  ③ 后端（FastAPI + Python 3.14，端口 8000）                              │
-│   · /api/prompt        优化 / 快速润色 / 版本历史                          │
-│   · /api/lyric         歌词生成（确定性净化 + 纯音乐/演唱双模式）           │
-│   · /api/minimax       格式校验（确定性算法，不依赖 LLM）                  │
-│   · /api/settings/keys 密钥回填（环境变量 > .secrets.json）                │
-│   · LLMService：DeepSeek V4 (Pro / Flash)，统一 _chat()                  │
-│   · SQLite（aiosqlite）：提示词版本 / 会话元数据                            │
-└──────────────┬─────────────────────────────────────────────────────────┘
-               │ HTTPS（OpenAI 兼容协议）
-               ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│  ④ DeepSeek V4  API  │  https://api.deepseek.com                       │
-│   · Pro：提示词优化、歌词生成（中文长文本与结构化输出）                       │
-│   · Flash：曲谱 prompt 优化（兜底）、快速润色（短输出）                     │
-└──────────────┬─────────────────────────────────────────────────────────┘
-               │ 提示词包（.txt）→ 用户复制
-               ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│  ⑤ MiniMax 音乐网页版  │  https://minimaxi.com/audio/music              │
-│   · Music-3.0 模型（生成时勾选）                                          │
-│   · 用户粘贴 Styles / Lyrics → 生成 mp3 → 下载                            │
-└────────────────────────────────────────────────────────────────────────┘""", lang="text")
+add_image(doc, DIAG_OVERALL, caption="图 2.1  古韵AI 总体架构（5 层数据流）")
 
 add_heading(doc, "2.2  功能模块图", 2)
-add_code_block(doc,
-"""┌─────────────────── 古韵AI 主流程 ──────────────────────┐
-│                                                          │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐  │
-│  │ 步骤1        │    │ 步骤2        │    │ 步骤3        │  │
-│  │ 提示词创作   │───▶│ 歌词生成     │───▶│ 导出         │  │
-│  │             │    │             │    │             │  │
-│  │ · 创意输入  │    │ · 押韵偏好  │    │ · 格式校验  │  │
-│  │ · AI 优化   │    │ · 纯音乐开关│    │ · 一键打开  │  │
-│  │ · 快速润色  │    │ · 歌词编辑  │    │   MiniMax   │  │
-│  │ · 元标签编辑│    │ · 结构校验  │    │ · 提示词包  │  │
-│  │ · 风格编辑  │    │             │    │   下载      │  │
-│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘  │
-│         │                  │                  │         │
-│         ▼                  ▼                  ▼         │
-│  ┌────────────────────────────────────────────────────┐ │
-│  │  全链路版本管理（SQLite）                            │ │
-│  │  original / ai_optimized / human_modified / restored│ │
-│  └────────────────────────────────────────────────────┘ │
-│                                                          │
-│  ┌──────────────── 辅助能力 ────────────────────────┐  │
-│  │ · 密钥管理（设置面板）· 历史抽屉 · 字符计数 · 复制  │  │
-│  │ · MiniMax URL 常量（可切换主站/海外）               │  │
-│  │ · Electron openExternal（系统浏览器唤起）          │  │
-│  └────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────┘""", lang="text")
+add_para(doc, "主流程三步（提示词创作 → 歌词生成 → 导出跳转）横向串联，写入统一的版本管理数据库；"
+              "辅助能力横切关注点，作用于三个步骤之上：",
+         indent_first=0.74, space_after=6)
+add_image(doc, DIAG_MODULES, caption="图 2.2  古韵AI 功能模块图（主流程 + 数据层 + 辅助能力）")
 
 add_heading(doc, "2.3  数据流", 2)
 add_para(doc, "用户的一次完整创作对应一个 session_id（UUID，由前端生成，存于 Zustand persist），"
