@@ -86,3 +86,38 @@ MiniMax Audio 网页版（官方 API 关闭后指定的替代入口）已核实�
 
 `services/audio_service.py::midi_to_audio` 为空壳不渲染音频；无音乐理论约束层；无人声链路；
 单乐器伴奏；无混音母带；歌词无格律校验；无 LLM 自修复重试；无干预证据导出。
+
+## 打包与启动链路（V2.3.4 修复后，勿回退）
+
+- **前端构建必须保持 `frontend/vite.config.ts` 的 `base: './'`**。
+  若为默认 `'/'`，产物 index.html 会写出 `/assets/*` 绝对路径，
+  Electron 打包态以 `file://` 加载时会解析到盘符根目录（`file:///G:/assets/...`），
+  资源全部 404 → React 挂载失败 → **界面全白**。这就是 2026-09-14"软件无法运行"的根因。
+- **后端端口是动态的**：Electron 主进程探测空闲端口 → 以 `PORT` 环境变量注入后端 →
+  preload 经 `additionalArguments` 暴露 `window.electronAPI.backendPort` →
+  前端 `resolveApiBase()` 拼接基址。**不要再写死 8000**，也不要在后端自行改端口
+  （会导致前端指向错误地址）。
+- **必须在后端健康检查通过后才创建窗口**：PyInstaller onefile 后端实测需 3~6 秒启动，
+  原先固定 `setTimeout(2000)` 会让首屏接口请求全部失败。
+- 后端仅监听 `127.0.0.1`（原为 `0.0.0.0`，会把接口暴露给同局域网主机）。
+- 退出时必须用 `taskkill /PID x /T /F` 递归清理：onefile 后端是"引导进程 + 服务进程"
+  双进程结构，`child.kill()` 只杀得掉父进程，子进程会残留并继续占用端口。
+- 打包体积：安装包 **109MB**（137MB → 109MB，因 `files` 移除了 asar 内冗余的 `dist-backend/**`）。
+
+## 排错与构建环境坑（实测）
+
+1. **`ELECTRON_RUN_AS_NODE=1` 由 WorkBuddy 注入 shell**：任何 Electron 程序在该 shell 中
+   启动都会退化为纯 Node 模式**秒退、退出码 0、无输出**。测试 Electron 产物必须
+   `env -u ELECTRON_RUN_AS_NODE ...`。该变量**不在** Windows 注册表环境变量中，用户双击不受影响。
+2. **本环境 safe-delete 机制失效**：`rm`、`shutil.rmtree`、原生 `rd` 等删除操作一律被代理为
+   "移动到回收站"并失败，导致旧构建目录无法清理。绕过办法是让 electron-builder 换输出目录：
+   `--config.directories.output=<新目录>`。
+3. **杀毒扫描严重拖慢打包**：PyInstaller 的 `Fixing EXE headers` 阶段曾从 3 秒拖到 167 秒；
+   electron-builder 会因 `app.asar` 正被扫描而报 `The process cannot access the file`。
+4. **Bash 工具 PATH 可能异常**（`ls`/`head`/`dirname` not found），
+   需先 `export PATH="/usr/bin:/bin:/mingw64/bin:/c/Windows/System32:$PATH"`。
+5. **tasklist 输出的中文进程名在 bash 中 grep 不可靠**（GBK vs UTF-8），
+   改用 Python `decode('mbcs')` 处理；PowerShell 工具返回空输出，信息收集优先 Bash + Python。
+6. 历史遗留产物：`release/`（旧）与 `release-new/`（失败中间产物）因第 2 条未能删除，
+   最新可用产物为 `release-v234/`。
+
