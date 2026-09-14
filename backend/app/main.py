@@ -94,4 +94,24 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
+    import sys
+    # 启动前预检端口，避免用户在「双击 EXE」时撞上残留进程闪退看不到原因
+    try:
+        import socket
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind(("0.0.0.0", 8000))
+    except OSError as exc:
+        # winerror 10048 = 端口占用；其他系统 errno 98 同义
+        print("=" * 60, file=sys.stderr)
+        print(f"[FATAL] 端口 8000 被占用，EXE 无法启动。", file=sys.stderr)
+        print(f"  原因：{exc}", file=sys.stderr)
+        print("  解决：", file=sys.stderr)
+        print("    1) 任务管理器结束残留的 gu-yun-backend.exe", file=sys.stderr)
+        print("    2) 或在 PowerShell 执行：", file=sys.stderr)
+        print("       Get-NetTCPConnection -LocalPort 8000 | Select-Object OwningProcess", file=sys.stderr)
+        print("       Stop-Process -Id <PID> -Force", file=sys.stderr)
+        print("    3) 然后重新运行本 EXE", file=sys.stderr)
+        print("=" * 60, file=sys.stderr)
+        sys.exit(1)
     uvicorn.run(app, host="0.0.0.0", port=8000)
