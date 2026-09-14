@@ -7,14 +7,12 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [deepseekKey, setDeepseekKey] = useState('')
-  const [qwenKey, setQwenKey] = useState('')
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
       setDeepseekKey(localStorage.getItem('deepseek_api_key') || '')
-      setQwenKey(localStorage.getItem('qwen_api_key') || '')
       setSaved(false)
       setSaveError(null)
     }
@@ -22,7 +20,6 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
 
   const handleSave = async () => {
     localStorage.setItem('deepseek_api_key', deepseekKey)
-    localStorage.setItem('qwen_api_key', qwenKey)
     // file:// 打包态下相对路径失效，与 api.ts 保持同一回退逻辑
     const base = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000/api' : '/api'
     try {
@@ -31,7 +28,6 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           deepseek_api_key: deepseekKey,
-          qwen_api_key: qwenKey,
         }),
       })
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
@@ -71,21 +67,13 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               <input
                 type="password"
                 className="w-full bg-ink border border-gold/20 rounded-lg px-4 py-2.5 text-rice placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 text-sm"
-                placeholder="输入DeepSeek API Key"
+                placeholder="输入 DeepSeek API Key（V2 起唯一大模型依赖）"
                 value={deepseekKey}
                 onChange={(e) => setDeepseekKey(e.target.value)}
               />
-            </div>
-
-            <div>
-              <label className="block text-rice text-sm mb-2">千问 API Key</label>
-              <input
-                type="password"
-                className="w-full bg-ink border border-gold/20 rounded-lg px-4 py-2.5 text-rice placeholder:text-rice-dark/50 focus:outline-none focus:border-gold/50 text-sm"
-                placeholder="输入千问 API Key"
-                value={qwenKey}
-                onChange={(e) => setQwenKey(e.target.value)}
-              />
+              <p className="text-rice-dark text-xs mt-2 leading-relaxed">
+                用于提示词优化、歌词生成、快速润色三处调用。推荐使用 <code className="text-gold">deepseek-v4-pro</code> 等级的 Key，输出更稳定。
+              </p>
             </div>
           </div>
 

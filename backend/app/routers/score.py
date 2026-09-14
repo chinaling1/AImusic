@@ -31,7 +31,7 @@ async def generate_score(request: ScoreGenerateRequest):
 
     return ScoreGenerateResponse(
         abc_notation=abc_notation,
-        model="qwen",
+        model="deepseek_flash",
         session_id=session_id
     )
 

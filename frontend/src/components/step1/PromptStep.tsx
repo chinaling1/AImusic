@@ -3,6 +3,8 @@ import { useMusicStore, type PromptVersion } from '../../store/musicStore'
 import { api } from '../../services/api'
 import PromptHistoryDrawer from '../common/PromptHistoryDrawer'
 import SectionCard from '../common/SectionCard'
+import { MINIMAX_MUSIC_URL } from '../../constants/limits'
+import { openExternal } from '../../utils/external'
 
 /**
  * 解析 LLM 输出的 META / STYLES 分段（容错版）
@@ -207,6 +209,13 @@ export default function PromptStep() {
       <div className="text-center mb-2">
         <h2 className="text-2xl text-gold font-bold mb-2">提示词创作</h2>
         <p className="text-rice-dark text-sm">描述你的创意，AI 将生成 MiniMax 音乐网页版可直接使用的结构化元标签与风格描述</p>
+        <button
+          className="mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 border border-gold/30 text-gold hover:bg-gold/10 rounded-full text-xs transition-colors"
+          onClick={() => openExternal(MINIMAX_MUSIC_URL)}
+          title="在系统默认浏览器中打开 MiniMax 音乐创作页"
+        >
+          🎵 先去 MiniMax 音乐创作页看看
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

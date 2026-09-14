@@ -32,8 +32,6 @@ async def lifespan(app: FastAPI):
     saved = load_saved_keys()
     if not llm_service._deepseek_key and saved["deepseek_api_key"]:
         llm_service.update_keys(deepseek_key=saved["deepseek_api_key"])
-    if not llm_service._qwen_key and saved["qwen_api_key"]:
-        llm_service.update_keys(qwen_key=saved["qwen_api_key"])
     await init_db()
     print(f"[启动] 数据库就绪，耗时 {time.perf_counter() - started:.2f}s")
     yield
@@ -69,16 +67,15 @@ app.include_router(midi.router)
 
 class ApiKeyRequest(BaseModel):
     deepseek_api_key: Optional[str] = None
-    qwen_api_key: Optional[str] = None
 
 
 @app.post("/api/settings/keys")
 async def update_api_keys(request: ApiKeyRequest):
     """更新大模型密钥：内存立即生效 + 本地文件持久化（重启自动恢复）"""
-    llm_service.update_keys(request.deepseek_api_key, request.qwen_api_key)
+    llm_service.update_keys(deepseek_key=request.deepseek_api_key)
     # 至少提供了一个 Key 才落盘（避免空请求覆盖已有配置）
-    if request.deepseek_api_key or request.qwen_api_key:
-        save_keys_to_disk(request.deepseek_api_key, request.qwen_api_key)
+    if request.deepseek_api_key:
+        save_keys_to_disk(request.deepseek_api_key)
     return {"status": "ok"}
 
 
@@ -87,7 +84,6 @@ async def check_api_keys_status():
     """查询密钥配置状态（不返回密钥内容）"""
     return {
         "deepseek_configured": bool(llm_service._deepseek_key),
-        "qwen_configured": bool(llm_service._qwen_key),
     }
 
 

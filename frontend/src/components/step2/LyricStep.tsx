@@ -3,7 +3,8 @@ import { useMusicStore } from '../../store/musicStore'
 import { api } from '../../services/api'
 import SectionCard from '../common/SectionCard'
 import LyricEditor from './LyricEditor'
-import { LYRICS_LIMIT } from '../../constants/limits'
+import { LYRICS_LIMIT, MINIMAX_MUSIC_URL } from '../../constants/limits'
+import { openExternal } from '../../utils/external'
 
 // 押韵偏好下拉选项
 const RHYME_OPTIONS = [
@@ -69,6 +70,13 @@ export default function LyricStep() {
       <div className="text-center mb-2">
         <h2 className="text-2xl text-gold font-bold mb-2">歌词生成</h2>
         <p className="text-rice-dark text-sm">生成 MiniMax 歌词框可直接粘贴的英文结构标签歌词，标签后可带编曲/人声注记</p>
+        <button
+          className="mt-3 inline-flex items-center gap-1.5 px-4 py-1.5 border border-gold/30 text-gold hover:bg-gold/10 rounded-full text-xs transition-colors"
+          onClick={() => openExternal(MINIMAX_MUSIC_URL)}
+          title="在系统默认浏览器中打开 MiniMax 音乐创作页"
+        >
+          🎵 打开 MiniMax 音乐创作页
+        </button>
       </div>
 
       <SectionCard title="参考提示词">

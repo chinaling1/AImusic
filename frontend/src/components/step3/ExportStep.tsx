@@ -131,6 +131,22 @@ export default function ExportStep() {
     downloadTextFile(`古韵AI-提示词包-${stamp}.txt`, pack)
   }
 
+  /**
+   * 启动 MiniMax 时优先复制「完整提示词包」到剪贴板（含元标签/校验结果/参数），
+   * 用户在 MiniMax 创作页可直接分别粘贴到 Styles / Lyrics 输入框。
+   * 复制失败也允许打开，提示用户手动全选复制。
+   */
+  const buildLaunchPayload = () =>
+    buildExportPack({
+      originalPrompt,
+      metaTags,
+      stylesText,
+      lyricsText,
+      instrumental,
+      sectionCount: validation?.stats.section_count,
+      sections: validation?.stats.sections,
+    })
+
   useEffect(() => {
     // 进入导出页时自动执行一次校验
     void handleValidate()
@@ -241,7 +257,11 @@ export default function ExportStep() {
             </SectionCard>
           ) : null}
 
-          <MiniMaxSteps instrumental={instrumental} />
+          <MiniMaxSteps
+            instrumental={instrumental}
+            launchPayload={buildLaunchPayload()}
+            launchHint="复制失败，请按下方「导出提示词包」按钮下载后手动打开 MiniMax 粘贴"
+          />
         </div>
       </div>
     </div>

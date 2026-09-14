@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 
@@ -50,6 +50,14 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // 在系统默认浏览器中打开外部链接（仅放行 http/https，挡掉自定义协议注入）
+  ipcMain.handle('open-external', async (_event, url) => {
+    if (typeof url !== 'string') return false;
+    if (!/^https?:\/\//i.test(url)) return false;
+    await shell.openExternal(url);
+    return true;
+  });
+
   startBackend();
   setTimeout(createWindow, 2000);
 
