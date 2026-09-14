@@ -1,13 +1,22 @@
 /**
- * API 基址：
- * - 开发态（Vite 5173）与 http 部署：走相对路径 /api，由 Vite 代理或同源后端处理
- * - Electron 打包态（file://）：相对路径会解析为 file:///api/... 导致全部接口失效，
- *   此时回退到本机后端绝对地址（electron/main.js 会以 8000 端口拉起后端）
+ * 后端基址解析。三种运行形态：
+ *
+ * 1. Electron 打包态（file://）：相对路径会解析为 file:///api/... 导致接口全部失效，
+ *    必须使用本机绝对地址。端口由 Electron 主进程动态探测（规避 8000 被占用），
+ *    经 preload 以 window.electronAPI.backendPort 注入，这里优先取注入值。
+ * 2. 开发态（Vite 5173 / http 部署）：走相对路径 /api，由 Vite 代理或同源后端处理。
+ * 3. 旧版打包产物未注入端口时，回退 8000 保持兼容。
  */
-const API_BASE =
-  typeof window !== 'undefined' && window.location.protocol === 'file:'
-    ? 'http://127.0.0.1:8000/api'
-    : '/api'
+export function resolveApiBase(): string {
+  if (typeof window === 'undefined') return '/api'
+  if (window.location.protocol !== 'file:') return '/api'
+
+  const injected = window.electronAPI?.backendPort
+  const port = typeof injected === 'number' && Number.isFinite(injected) && injected > 0 ? injected : 8000
+  return `http://127.0.0.1:${port}/api`
+}
+
+const API_BASE = resolveApiBase()
 
 async function request(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {

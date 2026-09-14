@@ -13,9 +13,17 @@ frontend/node_modules/
 frontend/dist/
 dist/
 dist-backend/
-release/
+# release* 覆盖 release/、release-v234/、release-new/ 等所有打包输出目录，
+# 避免误将上百 MB 的安装包提交入库
+release*/
 build/
 *.tsbuildinfo
+
+# ---------- 本次修复的验证产物（仅本地留证，不入库） ----------
+修复验证-*.png
+
+# ---------- 临时构建目录（electron-builder 中间文件） ----------
+.tmp-build/
 
 # ---------- Python ----------
 __pycache__/

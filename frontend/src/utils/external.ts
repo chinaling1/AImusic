@@ -13,6 +13,8 @@ declare global {
     electronAPI?: {
       isElectron: boolean
       platform: string
+      /** 后端实际监听端口，由 Electron 主进程经 preload 注入；0 表示未注入 */
+      backendPort?: number
       openExternal?: (url: string) => Promise<boolean>
     }
   }

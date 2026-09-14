@@ -9,7 +9,21 @@
 - /api/midi     MIDI 转换（P1 兜底，主流程不使用）
 - /api/settings 运行时密钥配置
 """
+import sys
 import time
+
+# Windows 上 PyInstaller 打包的控制台程序，stdout/stderr 默认沿用系统 ANSI 代码页（常为 GBK）。
+# Electron 主进程以管道方式读取后端输出并按 UTF-8 解码，若此处不做处理，中文日志会呈乱码，
+# 直接影响启动问题的定位。
+# 策略：仅在输出被重定向（非终端）时切换为 UTF-8；用户直接双击运行时保持系统编码，
+# 以免 Windows 控制台（代码页 936）反而显示乱码。
+if sys.stdout is not None and not sys.stdout.isatty():
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except Exception:
+            # 流不支持 reconfigure（如被替换为重定向对象）时保持原样，不影响主流程
+            pass
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -93,25 +107,64 @@ async def root():
 
 
 if __name__ == "__main__":
-    import uvicorn
+    import os
+    import socket
     import sys
-    # 启动前预检端口，避免用户在「双击 EXE」时撞上残留进程闪退看不到原因
+
+    import uvicorn
+
+    # ---------------------------------------------------------------
+    # 端口决策
+    #   1) Electron 主进程启动时会动态探测空闲端口并以 PORT 环境变量注入，
+    #      此时必须严格使用该端口——若自行换端口，前端将指向错误地址。
+    #   2) 用户直接双击 exe 独立运行时没有 PORT，默认 8000；
+    #      若 8000 被残留进程占用，则向后探测一个可用端口，而不是直接退出。
+    # ---------------------------------------------------------------
+    raw_port = os.environ.get("PORT", "").strip()
+    port_injected = raw_port != ""
     try:
-        import socket
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind(("0.0.0.0", 8000))
-    except OSError as exc:
-        # winerror 10048 = 端口占用；其他系统 errno 98 同义
-        print("=" * 60, file=sys.stderr)
-        print(f"[FATAL] 端口 8000 被占用，EXE 无法启动。", file=sys.stderr)
-        print(f"  原因：{exc}", file=sys.stderr)
-        print("  解决：", file=sys.stderr)
-        print("    1) 任务管理器结束残留的 gu-yun-backend.exe", file=sys.stderr)
-        print("    2) 或在 PowerShell 执行：", file=sys.stderr)
-        print("       Get-NetTCPConnection -LocalPort 8000 | Select-Object OwningProcess", file=sys.stderr)
-        print("       Stop-Process -Id <PID> -Force", file=sys.stderr)
-        print("    3) 然后重新运行本 EXE", file=sys.stderr)
-        print("=" * 60, file=sys.stderr)
-        sys.exit(1)
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        start_port = int(raw_port) if port_injected else 8000
+    except ValueError:
+        port_injected = False
+        start_port = 8000
+
+    def is_port_available(port: int) -> bool:
+        """尝试绑定回环地址以判断端口是否可用（SO_REUSEADDR 避免 TIME_WAIT 误判）。"""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind(("127.0.0.1", port))
+                return True
+            except OSError:
+                return False
+
+    port = start_port
+    if not is_port_available(port):
+        if port_injected:
+            # 主进程已探测为空闲，走到这里说明探测与绑定之间存在竞态
+            print("=" * 60, file=sys.stderr)
+            print(f"[FATAL] 主进程指定的端口 {port} 已被占用，服务无法启动。", file=sys.stderr)
+            print("  请关闭占用该端口的程序后重新打开应用。", file=sys.stderr)
+            print("=" * 60, file=sys.stderr)
+            sys.exit(1)
+
+        # 独立运行场景：向后探测可用端口
+        for candidate in range(start_port + 1, start_port + 21):
+            if is_port_available(candidate):
+                port = candidate
+                print(
+                    f"[提示] 端口 {start_port} 被占用，已自动改用 {port}",
+                    file=sys.stderr,
+                )
+                break
+        else:
+            print("=" * 60, file=sys.stderr)
+            print(f"[FATAL] 从 {start_port} 起连续 20 个端口均被占用，服务无法启动。", file=sys.stderr)
+            print("  请在任务管理器中结束残留的 gu-yun-backend.exe 后重试。", file=sys.stderr)
+            print("=" * 60, file=sys.stderr)
+            sys.exit(1)
+
+    # 仅监听回环地址：本应用只服务本机桌面客户端，
+    # 绑 0.0.0.0 会把接口暴露给同一局域网内的其他主机，属不必要的风险面。
+    print(f"[启动] 后端监听 http://127.0.0.1:{port}", file=sys.stderr, flush=True)
+    uvicorn.run(app, host="127.0.0.1", port=port)

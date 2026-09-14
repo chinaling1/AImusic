@@ -1,7 +1,24 @@
 import os
+import sys
+
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _persistent_base_dir() -> str:
+    """返回持久化数据的基准目录。
+
+    注意：PyInstaller --onefile 打包后，__file__ 指向的是临时解压目录
+    （形如 %TEMP%\\_MEIxxxxxx，进程退出即被清理）。若据此落盘，
+    用户在设置面板保存的 API Key、以及导出的音频会在每次重启后丢失。
+    因此冻结态（frozen）改用可执行文件自身所在目录作为基准。
+
+    开发态保持原有行为（backend/app 目录），不影响本地调试。
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
 
 
 class Settings:
@@ -19,12 +36,14 @@ class Settings:
     # v4 系列默认开启思考模式，创作类任务无需链式推理，关闭可显著降低延迟与输出噪声
     DEEPSEEK_DISABLE_THINKING: bool = os.getenv("DEEPSEEK_DISABLE_THINKING", "true").lower() == "true"
 
+    # 数据库仍使用相对路径（相对进程工作目录），保持既有部署行为不变；
+    # Electron 拉起后端时 cwd = resources/backend，数据库即落在该目录。
     DATABASE_PATH: str = os.getenv("DATABASE_PATH", "ai_music.db")
-    OUTPUT_DIR: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
+    OUTPUT_DIR: str = os.path.join(_persistent_base_dir(), "output")
 
     # 运行时密钥持久化文件（设置面板保存的 Key 写入此处，重启自动恢复；
     # 已加入 .gitignore，绝不入库）
-    SECRETS_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".secrets.json")
+    SECRETS_PATH: str = os.path.join(_persistent_base_dir(), ".secrets.json")
 
 
 settings = Settings()

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { resolveApiBase } from '../../services/api'
 
 interface SettingsModalProps {
   open: boolean
@@ -20,8 +21,8 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
 
   const handleSave = async () => {
     localStorage.setItem('deepseek_api_key', deepseekKey)
-    // file:// 打包态下相对路径失效，与 api.ts 保持同一回退逻辑
-    const base = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000/api' : '/api'
+    // 与 api.ts 复用同一基址解析逻辑，避免两处端口判断不一致
+    const base = resolveApiBase()
     try {
       const resp = await fetch(`${base}/settings/keys`, {
         method: 'POST',
