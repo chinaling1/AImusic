@@ -16,11 +16,18 @@ dist-backend/
 # release* 覆盖 release/、release-v234/、release-new/ 等所有打包输出目录，
 # 避免误将上百 MB 的安装包提交入库
 release*/
+release-*/
 build/
 *.tsbuildinfo
 
-# ---------- 本次修复的验证产物（仅本地留证，不入库） ----------
-修复验证-*.png
+# ---------- 本地运行时残留的旧发布包 ----------
+# 说明：以下目录在本机当前被某个进程锁住了 app.asar 文件（WinError 32），
+# 进程级占用未释放之前普通用户态无法删除；.gitignore 已覆盖，git 不会上传。
+# 待重启后请手动执行：rd /s /q "release"  "release-new"  "release-v234"
+# 若仍提示占用，资源管理器中关闭项目根目录的打开句柄后再试。
+release/win-unpacked/
+release-new/win-unpacked/
+release-v234/win-unpacked/
 
 # ---------- 临时构建目录（electron-builder 中间文件） ----------
 .tmp-build/
@@ -85,3 +92,11 @@ models/
 backend/app/.secrets.json
 build-py/
 exe_test*.log
+
+# ---------- IDE / 工具工作目录（个人过程记录与 IDE 状态，绝不入库） ----------
+.trae/
+.workbuddy/
+.cursor/
+.aider*
+.claude/
+.mavis/

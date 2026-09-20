@@ -1,0 +1,13 @@
+{
+  "name": "guyun-ppt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "久别 - AI 音乐赛道演示课件生成",
+  "scripts": {
+    "build": "node compile.js"
+  },
+  "dependencies": {
+    "@electron/asar": "^4.3.0",
+    "pptxgenjs": "^3.12.0"
+  }
+}
