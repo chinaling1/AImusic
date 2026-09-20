@@ -1,59 +1,67 @@
-# UI 示意图说明
+# 工具使用截图
 
-> ⚠️ **本目录图片为 UI 示意图（mockup），不是工具实际运行时的真实截图。**
+> 本目录包含工具实际启动运行时的真实截图（Edge headless 抓取，非 mockup）。
+> 抓取方式：启动 `uvicorn app.main:app` + `vite dev` → `msedge --headless --screenshot http://localhost:5174/?step=N`
 
-## 为什么是示意图
+## 截图清单
 
-- 原项目里的真实测试截图（`测试截图/1-输入创意.png` 等 4 张）已在清理项目时被 .gitignore 覆盖删除
-- 当前环境无法启动浏览器渲染工具（Playwright 不可用 / Playwright 浏览器未安装），无法重新生成真实截图
-- 为保留「工具使用流程」的可视化证据，使用 Python + PIL 按 `frontend/src/components/` 实际代码布局生成了 4 张 UI 示意图
+| # | 文件名 | 对应步骤 | 抓取 URL | 抓取状态 |
+|---|---|---|---|---|
+| 1 | `1-Step1-提示词优化.png` | STEP 1 - 提示词优化 | `http://localhost:5174/?step=0` | ✅ 真实截图 |
+| 2 | `2-Step2-歌词生成.png` | STEP 2 - 歌词生成 | `http://localhost:5174/?step=1` | ✅ 真实截图 |
+| 3 | `3-Step3-格式校验与交付.png` | STEP 3 - 格式校验与交付 | `http://localhost:5174/?step=2` | ✅ 真实截图 |
+| 4 | `4-全链路交付流程.png` | 全流程综合示意图 | （综合示意） | ⚠️ PIL 示意图 |
 
-## 4 张图对应的工具步骤 | Steps
+## 第 4 张「全链路交付流程」是示意图
 
-| # | 文件名 | 对应工具步骤 | 示意图内容 |
-|---|---|---|---|
-| 1 | `1-Step1-提示词优化.png` | STEP 1 | 用户输入原始提示词 → DeepSeek Pro 输出 Meta + Styles |
-| 2 | `2-Step2-歌词生成.png` | STEP 2 | 确认提示词 → DeepSeek Pro 输出含 14 种结构标签的古风歌词 |
-| 3 | `3-Step3-格式校验与交付.png` | STEP 3 | 本地确定性校验 4 项规则全通过 + 一键复制/打开 MiniMax |
-| 4 | `4-全链路交付流程.png` | 全流程 | 三步时间线 + 三类版本入库证据 |
+原因：该图是「STEP 1 → STEP 2 → STEP 3」完整流程的横向时间线 + 三类版本入库证据，
+没有单一的 React 组件渲染这个视图，是把三步合并的总结图。为保留可读性，使用 PIL 按布局手绘示意图。
 
-## 如何获取真实截图
+## URL 参数支持
 
-如需替换为真实工具运行截图，请按以下步骤：
+为了让截图工具/评审快速跳到指定步骤，前端 `App.tsx` 已添加 `?step=N` URL 参数支持：
 
-```powershell
-# 1. 安装 playwright（如未安装）
-pip install playwright
-playwright install chromium
-
-# 2. 启动后端
-cd backend
-python -m uvicorn app.main:app --reload --port 8000
-
-# 3. 启动前端（新窗口）
-cd frontend
-npm run dev
-
-# 4. 在浏览器访问 http://localhost:5173
-# 5. 用 Playwright/Puppeteer 截 4 张关键页面的 PNG
-
-# 6. 替换本目录的 mockup PNG
+```typescript
+// frontend/src/App.tsx
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search)
+  const stepParam = params.get('step')
+  if (stepParam !== null) {
+    const n = Number(stepParam)
+    if (Number.isInteger(n) && n >= 0 && n < stepComponents.length) {
+      setStep(n)
+    }
+  }
+}, [setStep])
 ```
 
-## 示意图与实际代码的一致性
+合法值：`?step=0` (PromptStep) / `?step=1` (LyricStep) / `?step=2` (ExportStep)。
+不影响默认行为（无参数时按 zustand persist 的当前 step 显示）。
 
-示意图中的文字内容与 `frontend/src/components/` 实际组件保持一致：
+## 如何重新生成真实截图
 
-- 配色：Vintage & Academic 主题（深蓝 #003049 + 深红 #780000 + 米黄 #fdf0d5）
-- STEP 1 组件：`frontend/src/components/step1/PromptStep.tsx`
-- STEP 2 组件：`frontend/src/components/step2/LyricStep.tsx`
-- STEP 3 组件：`frontend/src/components/step3/MiniMaxSteps.tsx` + `ValidationPanel.tsx`
-- 元标签六项：与 `backend/app/routers/minimax.py::META_TAG_NAMES` 一致
+如评审要求最新真实截图，重新执行以下步骤：
 
-## 评审说明
+```powershell
+# 1. 启动后端（窗口 1）
+cd backend
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8765
 
-若评审对示意图与真实 UI 的差异有疑问，可要求团队成员：
-1. 启动 `npm run dev` + `uvicorn app.main:app`
-2. 在浏览器手动操作三步流程
-3. 截真实截图替换本目录文件
-4. 提交 `git commit -m "替换 UI 示意图为真实截图"`
+# 2. 启动前端（窗口 2）
+cd frontend
+npx vite --port 5174
+
+# 3. 等待 Vite 输出 "ready in ..." 后（约 5 秒）
+
+# 4. Edge headless 截图（窗口 3）
+& "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" `
+  --headless=new --disable-gpu --no-sandbox --hide-scrollbars `
+  --window-size=1400,900 `
+  --screenshot="C:\edge_shots\s0.png" `
+  "http://localhost:5174/?step=0"
+# 重复 step=1, step=2 各截一张
+
+# 5. 替换本目录 PNG
+```
+
+截图尺寸 1400×900，与 LAYOUT_16x9 PPT 画布一致。

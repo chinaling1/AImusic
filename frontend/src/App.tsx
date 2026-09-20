@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import AppLayout from './components/layout/AppLayout'
 import { useMusicStore } from './store/musicStore'
 import PromptStep from './components/step1/PromptStep'
@@ -7,8 +8,20 @@ import ExportStep from './components/step3/ExportStep'
 const stepComponents = [PromptStep, LyricStep, ExportStep]
 
 export default function App() {
-  const { currentStep, loading, error } = useMusicStore()
+  const { currentStep, loading, error, setStep } = useMusicStore()
   const StepComponent = stepComponents[currentStep] || PromptStep
+
+  // 允许通过 URL ?step=N (0/1/2) 切换步骤，方便演示/截图工具跳转
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const stepParam = params.get('step')
+    if (stepParam !== null) {
+      const n = Number(stepParam)
+      if (Number.isInteger(n) && n >= 0 && n < stepComponents.length) {
+        setStep(n)
+      }
+    }
+  }, [setStep])
 
   return (
     <AppLayout currentStep={currentStep}>
